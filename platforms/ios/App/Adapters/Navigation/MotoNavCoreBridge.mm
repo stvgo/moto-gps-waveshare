@@ -58,6 +58,7 @@ NSString *TrafficName(moto::nav::TrafficLevel level) {
     case moto::nav::TrafficLevel::Severe: return @"severe";
     case moto::nav::TrafficLevel::Unknown: return @"unknown";
   }
+  return @"unknown";
 }
 
 NSString *DisplayPageName(moto::nav::DisplayPage page) {
@@ -66,7 +67,9 @@ NSString *DisplayPageName(moto::nav::DisplayPage page) {
     case moto::nav::DisplayPage::Speed: return @"speed";
     case moto::nav::DisplayPage::Compass: return @"compass";
     case moto::nav::DisplayPage::Music: return @"music";
+    case moto::nav::DisplayPage::Device: return @"device";
   }
+  return @"navigation";
 }
 
 NSString *StateName(moto::nav::NavState state) {
@@ -78,6 +81,7 @@ NSString *StateName(moto::nav::NavState state) {
     case moto::nav::NavState::Rerouting: return @"rerouting";
     case moto::nav::NavState::Arrived: return @"arrived";
   }
+  return @"idle";
 }
 
 NSString *NetworkName(moto::nav::NetworkState state) {
@@ -86,6 +90,7 @@ NSString *NetworkName(moto::nav::NetworkState state) {
     case moto::nav::NetworkState::Connecting: return @"connecting";
     case moto::nav::NetworkState::Online: return @"online";
   }
+  return @"offline";
 }
 
 NSString *CommandName(moto::nav::CommandType type) {
@@ -93,6 +98,7 @@ NSString *CommandName(moto::nav::CommandType type) {
     case moto::nav::CommandType::RequestRoute: return @"request_route";
     case moto::nav::CommandType::RequestTraffic: return @"request_traffic";
   }
+  return @"request_route";
 }
 
 }  // namespace
@@ -312,6 +318,7 @@ struct BridgeStorage {
   if ([pageName isEqualToString:@"speed"]) page = moto::nav::DisplayPage::Speed;
   if ([pageName isEqualToString:@"compass"]) page = moto::nav::DisplayPage::Compass;
   if ([pageName isEqualToString:@"music"]) page = moto::nav::DisplayPage::Music;
+  if ([pageName isEqualToString:@"device"]) page = moto::nav::DisplayPage::Device;
   return [self handle:moto::nav::DisplayPageSelected{page}];
 }
 
