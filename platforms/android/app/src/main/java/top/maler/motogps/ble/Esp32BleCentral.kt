@@ -397,9 +397,9 @@ class Esp32BleCentral(
 
     private fun waitForBond() {
         phase = Phase.BONDING
-        snapshot = snapshot.copy(connection = BleDeviceSnapshot.Connection.Connecting(deviceName(), "请在手机弹出的配对请求中点“配对”"))
+        snapshot = snapshot.copy(connection = BleDeviceSnapshot.Connection.Connecting(deviceName(), "Por favor acepta la solicitud de vinculación en el teléfono"))
         startStageTimeout(BOND_TIMEOUT_MS) {
-            recoverFromTransportError("配对没有完成。请在系统蓝牙设置中删除 MOTO GPS 后重试")
+            recoverFromTransportError("La vinculación no se completó. Por favor elimina MOTO GPS en Ajustes de Bluetooth y reintenta")
         }
     }
 
