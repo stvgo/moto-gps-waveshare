@@ -1,4 +1,6 @@
 import { createServer } from "node:http";
+import { createReadStream, existsSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import { validRequestId, validateRouteRequest } from "./validation.js";
 import { validateTileCoordinates } from "./map-tiles.js";
@@ -165,17 +167,37 @@ export function createGateway({
       return;
     }
 
+    if ((request.method === "GET" || request.method === "HEAD") && (requestUrl.pathname === "/moto-gps.apk" || requestUrl.pathname === "/app-debug.apk")) {
+      const apkPath = fileURLToPath(new URL("../app-debug.apk", import.meta.url));
+      if (existsSync(apkPath)) {
+        const stat = statSync(apkPath);
+        response.writeHead(200, {
+          "Content-Type": "application/vnd.android.package-archive",
+          "Content-Length": stat.size,
+          "Content-Disposition": 'attachment; filename="moto-gps.apk"',
+        });
+        if (request.method === "HEAD") {
+          response.end();
+          return;
+        }
+        createReadStream(apkPath).pipe(response);
+        return;
+      }
+      sendJson(response, 404, { error: "APK_NOT_FOUND" }, allowedOrigin);
+      return;
+    }
+
     if (request.method === "GET" && requestUrl.pathname === "/healthz") {
       sendJson(
         response,
         200,
         {
           status: "ok",
-          ready_for_live_navigation: providerMode === "amap",
+          ready_for_live_navigation: providerMode === "amap" || providerMode === "mapbox",
           provider: providerMode,
           capabilities: {
-            route_planning: providerMode === "amap",
-            route_traffic: providerMode === "amap",
+            route_planning: providerMode === "amap" || providerMode === "mapbox",
+            route_traffic: providerMode === "amap" || providerMode === "mapbox",
             // Route Planning v2 exposes neither legal road speed limits nor
             // live signal phases. API readiness must not imply those feeds.
             road_speed_limits: false,

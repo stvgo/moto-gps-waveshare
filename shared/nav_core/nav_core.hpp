@@ -49,13 +49,13 @@ struct BuildingContextFootprintSpan {
 
 struct NavCoreConfig {
   float maximum_usable_accuracy_m = 50.0F;
-  float off_route_threshold_m = 45.0F;
-  float on_route_threshold_m = 25.0F;
-  std::uint8_t off_route_confirmations = 3;
+  float off_route_threshold_m = 25.0F;      // Reduced from 45m for fast city off-route detection
+  float on_route_threshold_m = 15.0F;       // Reduced from 25m
+  std::uint8_t off_route_confirmations = 2; // Reduced from 3 to trigger reroute in ~1.5s
   float arrival_radius_m = 20.0F;
   std::uint8_t arrival_confirmations = 2;
-  TimestampMs gnss_stale_after_ms = 5'000;
-  TimestampMs route_retry_after_ms = 5'000;
+  TimestampMs gnss_stale_after_ms = 4'000;
+  TimestampMs route_retry_after_ms = 2'000; // Retry quickly after deviation
   TimestampMs traffic_refresh_interval_ms = 60'000;
   TimestampMs traffic_retry_after_ms = 10'000;
 };

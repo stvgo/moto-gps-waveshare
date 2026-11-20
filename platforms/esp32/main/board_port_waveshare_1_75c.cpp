@@ -29,12 +29,13 @@ constexpr char kTag[] = "board_waveshare";
 // Keep internal SRAM available for BLE and heading task stacks. Two 320-row
 // PSRAM buffers reduce repeated map traversal and still overlap drawing with
 // QSPI DMA. A 32-row internal-buffer experiment exhausted BLE startup memory.
-constexpr std::uint16_t kDrawBufferHeight = 320;
-constexpr bool kDrawBuffersUsePsram = true;
+constexpr std::uint16_t kDrawBufferHeight = 40;
+constexpr bool kDrawBuffersUsePsram = false;
 constexpr std::size_t kLvglExtraPoolBytes = 2U * 1024U * 1024U;
 static_assert(kLvglExtraPoolBytes <= LV_MEM_POOL_EXPAND_SIZE,
               "LVGL TLSF must support the board's extra PSRAM pool");
 constexpr gpio_num_t kPowerButtonGpio = GPIO_NUM_3;
+constexpr gpio_num_t kBootButtonGpio = GPIO_NUM_0;
 // J3 pin 11 in Waveshare's public schematic connects the CO5300 TE output
 // directly to ESP32-S3 GPIO13.  DCS 0x35 (sent below) enables a short vertical
 // blanking pulse on this line.
@@ -244,10 +245,10 @@ esp_err_t initialize_hidden_panel(std::size_t maximum_transfer_size,
   io_config.lcd_param_bits = 8;
   io_config.flags.quad_mode = true;
   // ESP32-S3 GPSPI can read an aligned PSRAM color buffer directly through
-  // GDMA. Without this flag esp_lcd allocates and copies into a same-sized
-  // internal bounce buffer for every flush, which caused the old large-buffer
-  // configuration to fail once NimBLE was active.
+  // GDMA in IDF 6.1+.
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
   io_config.flags.psram_dma_direct = true;
+#endif
   esp_lcd_panel_io_handle_t new_panel_io = nullptr;
   ESP_RETURN_ON_ERROR(
       esp_lcd_new_panel_io_spi(
@@ -746,6 +747,15 @@ esp_err_t initialize_power_control() {
   ESP_RETURN_ON_ERROR(gpio_config(&button_config), kTag,
                       "PWR SYS_OUT input configuration failed");
 
+  gpio_config_t boot_config{};
+  boot_config.pin_bit_mask = 1ULL << kBootButtonGpio;
+  boot_config.mode = GPIO_MODE_INPUT;
+  boot_config.pull_up_en = GPIO_PULLUP_ENABLE;
+  boot_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  boot_config.intr_type = GPIO_INTR_DISABLE;
+  ESP_RETURN_ON_ERROR(gpio_config(&boot_config), kTag,
+                      "BOOT GPIO0 input configuration failed");
+
   i2c_device_config_t pmic_config{};
   pmic_config.dev_addr_length = I2C_ADDR_BIT_LEN_7;
   pmic_config.device_address = kAxp2101Address;
@@ -866,7 +876,7 @@ extern "C" esp_err_t board_port_init(void) {
           ESP_LV_ADAPTER_ROTATE_0);
   display_config.profile.buffer_height = kDrawBufferHeight;
   display_config.profile.use_psram = kDrawBuffersUsePsram;
-  display_config.profile.require_double_buffer = true;
+  display_config.profile.require_double_buffer = false;
   display = esp_lv_adapter_register_display(&display_config);
   if (display == nullptr) {
     ESP_LOGE(kTag, "LVGL could not register the CO5300 display");
@@ -972,6 +982,30 @@ extern "C" bool board_port_power_button_pressed(void) {
   // Official schematic: PWRON -> R12/BSS138/R9 -> SYS_OUT -> GPIO3. The
   // inverter stage makes SYS_OUT high for the duration of a physical press.
   return gpio_get_level(kPowerButtonGpio) != 0;
+}
+
+extern "C" bool board_port_boot_button_pressed(void) {
+  // BOOT button is pulled high by hardware; goes LOW (0) when physically pressed.
+  return gpio_get_level(kBootButtonGpio) == 0;
+}
+
+static uint8_t s_brightness_index = 0;
+constexpr uint8_t kBrightnessSteps[] = {100, 75, 45, 15};
+
+extern "C" esp_err_t board_port_set_brightness(uint8_t percent) {
+  if (panel == nullptr) {
+    return ESP_ERR_INVALID_STATE;
+  }
+  uint8_t level = percent > 100 ? 100 : percent;
+  return esp_lcd_panel_co5300_set_brightness(panel, level);
+}
+
+extern "C" uint8_t board_port_cycle_brightness(void) {
+  s_brightness_index = (s_brightness_index + 1) % (sizeof(kBrightnessSteps) / sizeof(kBrightnessSteps[0]));
+  uint8_t new_level = kBrightnessSteps[s_brightness_index];
+  board_port_set_brightness(new_level);
+  ESP_LOGI(kTag, "AMOLED brightness cycled to %u%%", new_level);
+  return new_level;
 }
 
 extern "C" esp_err_t board_port_power_off(void) {

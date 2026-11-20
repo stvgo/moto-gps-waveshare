@@ -12,4 +12,4 @@ dependencies:
   lvgl/lvgl:
     version: "9.5.0"
     public: true
-    override_path: "../../../third_party/lvgl"
+    override_path: "/project/third_party/lvgl"

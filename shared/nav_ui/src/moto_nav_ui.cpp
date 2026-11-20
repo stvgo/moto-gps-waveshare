@@ -918,31 +918,31 @@ void draw_maneuver_icon(lv_event_t *event) {
         case MOTO_MANEUVER_ARRIVE: {
             lv_draw_line_dsc_t pole;
             lv_draw_line_dsc_init(&pole);
-            pole.color = kWhite;
-            pole.width = px(11);
+            pole.color = kGreen;
+            pole.width = px(13);
             pole.round_start = 1;
             pole.round_end = 1;
-            pole.p1 = {static_cast<lv_value_precise_t>(area.x1 + px(42)),
-                       static_cast<lv_value_precise_t>(area.y1 + px(101))};
-            pole.p2 = {static_cast<lv_value_precise_t>(area.x1 + px(42)),
-                       static_cast<lv_value_precise_t>(area.y1 + px(17))};
+            pole.p1 = {static_cast<lv_value_precise_t>(area.x1 + px(38)),
+                       static_cast<lv_value_precise_t>(area.y1 + px(106))};
+            pole.p2 = {static_cast<lv_value_precise_t>(area.x1 + px(38)),
+                       static_cast<lv_value_precise_t>(area.y1 + px(12))};
             lv_draw_line(layer, &pole);
 
             lv_draw_triangle_dsc_t flag;
             lv_draw_triangle_dsc_init(&flag);
-            flag.color = kWhite;
+            flag.color = kGreen;
             flag.opa = LV_OPA_COVER;
             flag.p[0] = {
-                static_cast<lv_value_precise_t>(area.x1 + px(46)),
-                static_cast<lv_value_precise_t>(area.y1 + px(20)),
+                static_cast<lv_value_precise_t>(area.x1 + px(44)),
+                static_cast<lv_value_precise_t>(area.y1 + px(16)),
             };
             flag.p[1] = {
-                static_cast<lv_value_precise_t>(area.x1 + px(102)),
-                static_cast<lv_value_precise_t>(area.y1 + px(39)),
+                static_cast<lv_value_precise_t>(area.x1 + px(112)),
+                static_cast<lv_value_precise_t>(area.y1 + px(40)),
             };
             flag.p[2] = {
-                static_cast<lv_value_precise_t>(area.x1 + px(46)),
-                static_cast<lv_value_precise_t>(area.y1 + px(58)),
+                static_cast<lv_value_precise_t>(area.x1 + px(44)),
+                static_cast<lv_value_precise_t>(area.y1 + px(64)),
             };
             lv_draw_triangle(layer, &flag);
             return;
@@ -1359,11 +1359,22 @@ void update_nav_status(const moto_ui_state_t *state) {
         lv_label_set_text(ui.nav_status, "");
         return;
     }
+    if(state->mode == MOTO_UI_ARRIVED) {
+        lv_obj_set_style_text_font(ui.nav_status, &lv_font_montserrat_28, 0);
+        lv_obj_set_width(ui.nav_status, px(340));
+        lv_obj_align(ui.nav_status, LV_ALIGN_TOP_MID, 0, px(20));
+        lv_label_set_text(ui.nav_status, "¡LLEGASTE!");
+        lv_obj_set_style_text_color(ui.nav_status, kGreen, 0);
+        return;
+    }
+    lv_obj_set_style_text_font(ui.nav_status, &lv_font_montserrat_16, 0);
+    lv_obj_set_width(ui.nav_status, px(220));
+    lv_obj_align(ui.nav_status, LV_ALIGN_TOP_MID, 0, px(16));
     switch(state->mode) {
         case MOTO_UI_ACQUIRING_FIX: text = "ACQUIRING GPS"; color = kAmber; break;
         case MOTO_UI_REROUTING: text = "REROUTING"; color = kAmber; break;
         case MOTO_UI_OFFLINE: text = "ROUTE CACHED"; color = kQuiet; break;
-        case MOTO_UI_ARRIVED: text = "ARRIVED"; color = kGreen; break;
+        case MOTO_UI_ARRIVED: text = "¡LLEGASTE!"; color = kGreen; break;
         case MOTO_UI_NAVIGATING:
             if(state->online == 0) text = "NO HOTSPOT";
             break;
@@ -1401,7 +1412,10 @@ void update_navigation(const moto_ui_state_t *state) {
         std::snprintf(value, sizeof(value), "%u",
                       static_cast<unsigned>(state->distance_to_maneuver_m));
     }
-    if(state->mode == MOTO_UI_ARRIVED) std::snprintf(value, sizeof(value), "0");
+    if(state->mode == MOTO_UI_ARRIVED) {
+        std::snprintf(value, sizeof(value), "FIN");
+        unit = "";
+    }
     lv_label_set_text(ui.nav_distance, value);
     lv_label_set_text(ui.nav_unit, unit);
     // This number is never the total trip distance. Its physical attachment to

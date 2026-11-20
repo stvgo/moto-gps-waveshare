@@ -55,6 +55,15 @@ void board_port_unlock(void);
 /** GPIO3/SYS_OUT is high while the case PWR key is physically held. */
 bool board_port_power_button_pressed(void);
 
+/** GPIO0 is low while the BOOT key is physically held. */
+bool board_port_boot_button_pressed(void);
+
+/** Set AMOLED brightness (0-100%). */
+esp_err_t board_port_set_brightness(uint8_t percent);
+
+/** Cycle AMOLED brightness (100% -> 75% -> 45% -> 15% -> 100%). Returns new level. */
+uint8_t board_port_cycle_brightness(void);
+
 /**
  * Request AXP2101 software power-off. Keep a deep-sleep fallback in the caller
  * for the USB-powered case until all three supply combinations are bench-tested.

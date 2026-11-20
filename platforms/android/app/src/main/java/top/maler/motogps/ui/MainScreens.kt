@@ -101,10 +101,10 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("出发", fontWeight = FontWeight.SemiBold) },
+                title = { Text("MOTO GPS", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = actions.openGateway, modifier = Modifier.testTag("gateway-settings-toolbar")) {
-                        Icon(Icons.Default.Settings, contentDescription = "网关设置")
+                        Icon(Icons.Default.Settings, contentDescription = "Ajustes de Gateway")
                     }
                 },
                 actions = { DeviceToolbarButton(model, actions.openDevice) },
@@ -117,8 +117,8 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 24.dp),
         ) {
             if (!model.isGatewayConfigured) {
-                section("gateway-setup", footer = "填写你部署的网关地址后，就可以搜索地点和规划路线。") {
-                    ActionRow("设置导航网关", Icons.Outlined.Language, onClick = actions.openGateway)
+                section("gateway-setup", footer = "Configura la URL de tu gateway para buscar lugares y planear rutas.") {
+                    ActionRow("Configurar Gateway", Icons.Outlined.Language, onClick = actions.openGateway)
                 }
             }
             item(key = "search") {
@@ -139,7 +139,7 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
             if (model.destinationQuery.isNotEmpty()) {
                 section(
                     "results",
-                    header = "搜索结果",
+                    header = "Resultados de búsqueda",
                     footer = model.searchScopeText,
                 ) {
                     when {
@@ -149,7 +149,7 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                            Text("正在搜索…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Buscando lugares…", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
 
                         model.placeResults.isNotEmpty() -> model.placeResults.forEachIndexed { index, place ->
@@ -162,11 +162,11 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
 
                         else -> EmptyState(
                             Icons.Default.Search,
-                            if (model.placeSearchFailure == null) "输入地点名称" else "暂无结果",
-                            model.placeSearchFailure ?: "至少输入两个字，例如“奥体中心”。",
+                            if (model.placeSearchFailure == null) "Escribe un destino" else "Sin resultados",
+                            model.placeSearchFailure ?: "Escribe un lugar o dirección, ej: 'Parque 93'",
                         ) {
                             if (model.placeSearchFailure != null) {
-                                TextButton(onClick = model::submitDestinationSearch) { Text("重新搜索") }
+                                TextButton(onClick = model::submitDestinationSearch) { Text("Reintentar") }
                             }
                         }
                     }
@@ -174,20 +174,20 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
                 if (model.searchLocationStatus == SearchLocationStatus.PERMISSION_DENIED) {
                     item(key = "location-permission") {
                         TextButton(onClick = actions.requestLocation, modifier = Modifier.padding(horizontal = 20.dp)) {
-                            Text("开启定位，按当前位置排序")
+                            Text("Activar GPS para ordenar por cercanía")
                         }
                     }
                 }
             } else {
                 if (model.recentPlaces.isEmpty()) {
                     item(key = "empty") {
-                        EmptyState(Icons.Outlined.Map, "选择目的地", "搜索地点或地址，选好路线就出发。")
+                        EmptyState(Icons.Outlined.Map, "Elige tu destino", "Busca cualquier lugar o dirección y sal a rodar.")
                     }
                 } else {
                     section(
                         "recent",
-                        header = "最近搜索",
-                        headerAction = { TextButton(onClick = model::clearRecentPlaces) { Text("清空") } },
+                        header = "Búsquedas recientes",
+                        headerAction = { TextButton(onClick = model::clearRecentPlaces) { Text("Borrar") } },
                     ) {
                         model.recentPlaces.forEachIndexed { index, place ->
                             if (index > 0) SectionDivider()
@@ -198,20 +198,20 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
                         }
                     }
                 }
-                section("tools", footer = "连接圆屏后，导航指引会自动同步。") {
+                section("tools", footer = "Al conectar la pantalla AMOLED, la navegación se sincroniza.") {
                     DeviceSummaryRow(model, actions.openDevice)
                     SectionDivider()
                     ActionRow(
-                        "地图与离线下载",
+                        "Mapas y offline",
                         Icons.Outlined.Map,
-                        subtitle = "自动加载周边，也能提前保存城市和沿途地图",
+                        subtitle = "Carga mapas cercanos o guarda ciudades",
                         onClick = actions.openMaps,
                     )
                     SectionDivider()
                     ActionRow(
-                        "演示导航",
+                        "Ruta de demostración",
                         Icons.Outlined.PlayCircle,
-                        subtitle = "先体验一次导航流程",
+                        subtitle = "Probar la pantalla con una ruta demo",
                         showChevron = false,
                         onClick = {
                             focusManager.clearFocus()
@@ -220,9 +220,9 @@ fun HomeScreen(model: AppModel, actions: ScreenActions, searchFocus: FocusReques
                     )
                 }
                 section("settings") {
-                    ActionRow("网关设置", Icons.Outlined.Language, onClick = actions.openGateway)
+                    ActionRow("Ajustes de Gateway", Icons.Outlined.Language, onClick = actions.openGateway)
                     SectionDivider()
-                    ActionRow("隐私与数据", Icons.Outlined.PrivacyTip, onClick = actions.openDataUse)
+                    ActionRow("Privacidad y datos", Icons.Outlined.PrivacyTip, onClick = actions.openDataUse)
                 }
             }
         }
@@ -240,11 +240,11 @@ private fun SearchField(
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
-        placeholder = { Text("搜索地点或地址") },
+        placeholder = { Text("Buscar destino o dirección") },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {
-                IconButton(onClick = onClear) { Icon(Icons.Default.Close, contentDescription = "清空搜索") }
+                IconButton(onClick = onClear) { Icon(Icons.Default.Close, contentDescription = "Borrar") }
             }
         },
         singleLine = true,
@@ -278,8 +278,8 @@ private fun PlaceRow(place: PlaceSearchResult, recent: Boolean, modifier: Modifi
 fun placeSubtitle(place: PlaceSearchResult): String {
     val area = place.displayArea.ifEmpty { listOf(place.city, place.district).filter { it.isNotEmpty() }.joinToString(" · ") }
     val parts = listOf(area, place.address).filter { it.isNotEmpty() }.toMutableList()
-    place.distanceM?.takeIf { it >= 0 }?.let { parts += "距你 ${formatDistance(it)}" }
-    return if (parts.isEmpty()) "查看路线" else parts.joinToString(" · ")
+    place.distanceM?.takeIf { it >= 0 }?.let { parts += "A ${formatDistance(it)}" }
+    return if (parts.isEmpty()) "Ver ruta" else parts.joinToString(" · ")
 }
 
 // ------------------------------------------------------------- route preview
@@ -292,14 +292,14 @@ fun RoutePreviewScreen(model: AppModel, actions: ScreenActions, onChangeDestinat
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("路线") },
+                title = { Text("Ruta") },
                 navigationIcon = {
                     IconButton(onClick = model::clearDestination) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 },
                 actions = {
-                    TextButton(onClick = onChangeDestination, modifier = Modifier.testTag("destination-change-button")) { Text("更换") }
+                    TextButton(onClick = onChangeDestination, modifier = Modifier.testTag("destination-change-button")) { Text("Cambiar") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
@@ -307,7 +307,7 @@ fun RoutePreviewScreen(model: AppModel, actions: ScreenActions, onChangeDestinat
         bottomBar = { NavigationActionBar(model) },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = padding) {
-            section("destination", header = "从我的位置出发") {
+            section("destination", header = "Desde mi ubicación actual") {
                 ActionRow(place.name, Icons.Default.LocationOn, iconTint = MotoColors.Red, subtitle = placeSubtitle(place), showChevron = false)
             }
             when {
@@ -319,8 +319,8 @@ fun RoutePreviewScreen(model: AppModel, actions: ScreenActions, onChangeDestinat
                     ) {
                         CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.5.dp)
                         Column {
-                            Text("正在规划路线")
-                            Text("获取当前位置与路况…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Calculando ruta...")
+                            Text("Consultando tráfico y opciones...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -332,11 +332,11 @@ fun RoutePreviewScreen(model: AppModel, actions: ScreenActions, onChangeDestinat
                             selectedId = model.selectedRoutePreviewId,
                             origin = model.routePreviewOrigin,
                             destination = place.location,
-                            description = "前往${place.name}的路线全览",
+                            description = "Ruta hacia ${place.name}",
                             modifier = Modifier.fillMaxWidth().height(260.dp).testTag("route-preview-map"),
                         )
                     }
-                    section("options", header = "选择路线", footer = "高德驾车路线 · 预计时间会随路况变化") {
+                    section("options", header = "Opciones de ruta", footer = "Ruta en moto · El tiempo varía según el tráfico") {
                         model.routePreviewCandidates.forEachIndexed { index, candidate ->
                             if (index > 0) SectionDivider()
                             RouteOptionRow(candidate, selected = candidate.id == model.selectedRoutePreviewId) {
@@ -345,17 +345,17 @@ fun RoutePreviewScreen(model: AppModel, actions: ScreenActions, onChangeDestinat
                         }
                     }
                     section("downloads") {
-                        ActionRow("地图与离线下载", Icons.Outlined.Map, subtitle = "可保存这条路线沿途的地图", onClick = actions.openMaps)
+                        ActionRow("Mapas y offline", Icons.Outlined.Map, subtitle = "Guarda el mapa a lo largo de esta ruta", onClick = actions.openMaps)
                     }
                 }
 
                 model.routePreviewFailure != null -> section("failure") {
-                    EmptyState(Icons.Default.Warning, "无法规划路线", model.routePreviewFailure.orEmpty()) {
+                    EmptyState(Icons.Default.Warning, "No se pudo calcular la ruta", model.routePreviewFailure.orEmpty()) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (model.searchLocationStatus == SearchLocationStatus.PERMISSION_DENIED) {
-                                TextButton(onClick = actions.requestLocation) { Text("开启定位") }
+                                TextButton(onClick = actions.requestLocation) { Text("Activar GPS") }
                             } else {
-                                TextButton(onClick = model::planRoutePreview) { Text("重新规划") }
+                                TextButton(onClick = model::planRoutePreview) { Text("Recalcular") }
                             }
                         }
                     }
@@ -401,7 +401,7 @@ private fun RouteOptionRow(candidate: RoutePreviewCandidate, selected: Boolean, 
         }
         Icon(
             if (selected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-            contentDescription = if (selected) "已选择" else null,
+            contentDescription = if (selected) "Seleccionada" else null,
             tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
             modifier = Modifier.size(28.dp),
         )
@@ -447,7 +447,7 @@ fun ActiveNavigationScreen(model: AppModel, actions: ScreenActions) {
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(if (model.isDemoActive) "演示导航" else "导航中") },
+                title = { Text(if (model.isDemoActive) "Ruta Demo" else "Navegando") },
                 actions = { DeviceToolbarButton(model, actions.openDevice) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
@@ -460,47 +460,47 @@ fun ActiveNavigationScreen(model: AppModel, actions: ScreenActions) {
                 ActionRow(
                     title = model.activeDestinationName,
                     icon = Icons.Default.Flag,
-                    subtitle = if (model.isDemoActive) "演示目的地" else "目的地",
+                    subtitle = if (model.isDemoActive) "Destino de prueba" else "Destino",
                     showChevron = false,
                 )
                 SectionDivider()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                    RideMetric("剩余时间", if (hasEstimate) model.remainingDurationText else "—", Modifier.weight(1f))
-                    RideMetric("剩余路程", if (hasEstimate) model.remainingDistanceText else "—", Modifier.weight(1f))
+                    RideMetric("Tiempo restante", if (hasEstimate) model.remainingDurationText else "—", Modifier.weight(1f))
+                    RideMetric("Distancia restante", if (hasEstimate) model.remainingDistanceText else "—", Modifier.weight(1f))
                 }
             }
-            section("status", header = "导航状态") {
+            section("status", header = "Estado de navegación") {
                 DeviceSummaryRow(model, actions.openDevice)
                 SectionDivider()
                 StatusRow(
-                    "手机定位",
+                    "GPS del celular",
                     Icons.Default.MyLocation,
                     when {
-                        model.isDemoActive -> "演示位置"
-                        nav.hasUsableFix -> "已获取"
-                        else -> "获取中"
+                        model.isDemoActive -> "Simulado"
+                        nav.hasUsableFix -> "Activo"
+                        else -> "Buscando..."
                     },
                     if (nav.hasUsableFix) MotoColors.Green else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 SectionDivider()
                 StatusRow(
-                    "路况",
+                    "Tráfico",
                     Icons.Default.DirectionsCar,
                     when {
-                        model.isDemoActive -> "演示中"
-                        nav.trafficRequestInFlight -> "更新中"
-                        nav.networkName == "online" -> "在线"
-                        else -> "离线"
+                        model.isDemoActive -> "Demo"
+                        nav.trafficRequestInFlight -> "Actualizando..."
+                        nav.networkName == "online" -> "En vivo"
+                        else -> "Offline"
                     },
                 )
                 SectionDivider()
-                StatusRow("周边地图", Icons.Outlined.Map, model.surroundingMap.statusText)
+                StatusRow("Mapa cercano", Icons.Outlined.Map, model.surroundingMap.statusText)
                 SectionDivider()
-                ActionRow("管理离线地图", Icons.Outlined.TravelExplore, onClick = actions.openMaps)
+                ActionRow("Administrar mapas offline", Icons.Outlined.TravelExplore, onClick = actions.openMaps)
             }
             if (model.isDemoActive) {
-                section("demo", footer = "道路数据 © OpenStreetMap contributors") {
-                    ActionRow("演示中的位置与行驶过程为模拟数据。", Icons.Default.Info, showChevron = false)
+                section("demo", footer = "Datos de mapa © OpenStreetMap contributors") {
+                    ActionRow("Esta es una ruta de demostración para pruebas.", Icons.Default.Info, showChevron = false)
                 }
             }
         }
@@ -512,18 +512,18 @@ private fun RideHero(model: AppModel) {
     val nav = model.navigation
     val failure = model.navigationFailure
     val title = when {
-        failure != null -> "导航需要处理"
-        nav.stateName == "acquiring" -> "正在获取位置"
-        nav.stateName == "planning" -> "正在规划路线"
-        nav.stateName == "rerouting" -> "正在重新规划"
-        nav.stateName == "arrived" -> "已到达目的地"
-        nav.stateName == "navigating" -> if (model.isDemoActive) "正在演示" else "正在导航"
-        else -> "准备出发"
+        failure != null -> "Atención requerida"
+        nav.stateName == "acquiring" -> "Buscando señal GPS..."
+        nav.stateName == "planning" -> "Calculando ruta..."
+        nav.stateName == "rerouting" -> "Recalculando ruta..."
+        nav.stateName == "arrived" -> "¡Llegaste a tu destino!"
+        nav.stateName == "navigating" -> if (model.isDemoActive) "Ruta Demo" else "Navegando"
+        else -> "Listo para rodar"
     }
     val detail = when {
         failure != null -> failure
-        nav.stateName == "navigating" && model.isDemoActive -> "预览行驶过程与圆屏上的导航指引。"
-        nav.stateName == "navigating" -> if (model.deviceReady) "圆屏已连接，手机可锁屏收好。" else "圆屏连接后，导航指引会自动同步。"
+        nav.stateName == "navigating" && model.isDemoActive -> "Simulando navegación en la pantalla circular."
+        nav.stateName == "navigating" -> if (model.deviceReady) "Pantalla AMOLED conectada. Puedes bloquear el celular." else "Sincronizando con pantalla AMOLED..."
         else -> model.phaseDetail
     }
     Column(

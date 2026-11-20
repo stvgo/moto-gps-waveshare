@@ -97,23 +97,23 @@ fun DeviceScreen(model: AppModel, actions: DeviceActions, onBack: () -> Unit) {
     }
     val detail = when (val c = device.connection) {
         is BleDeviceSnapshot.Connection.Connected ->
-            if (device.isReady) "圆屏已就绪，可以接收导航指引。" else "正在准备导航同步，请稍候。"
+            if (device.isReady) "Pantalla lista: sincronizando navegación." else "Preparando sincronización..."
         is BleDeviceSnapshot.Connection.Failed ->
-            if (c.message.contains("靠近") || c.message.contains("配对")) c.message else "${c.message}。请确认圆屏已开机并靠近手机。"
-        BleDeviceSnapshot.Connection.BluetoothUnavailable -> "请开启手机蓝牙。"
-        BleDeviceSnapshot.Connection.PermissionRequired -> "请允许 MOTO GPS 查找并连接附近的蓝牙设备。"
-        BleDeviceSnapshot.Connection.Scanning -> "请将已开机的圆屏放在手机附近。"
-        is BleDeviceSnapshot.Connection.Connecting -> c.detail ?: "请将已开机的圆屏放在手机附近。"
-        BleDeviceSnapshot.Connection.Idle -> "连接你的圆屏，在车把上查看导航。"
+            if (c.message.contains("靠近") || c.message.contains("配对")) c.message else "${c.message}. Asegúrate de que la pantalla esté encendida y cerca."
+        BleDeviceSnapshot.Connection.BluetoothUnavailable -> "Por favor activa el Bluetooth."
+        BleDeviceSnapshot.Connection.PermissionRequired -> "Permite a MOTO GPS conectar dispositivos Bluetooth."
+        BleDeviceSnapshot.Connection.Scanning -> "Mantén la pantalla AMOLED encendida cerca del teléfono."
+        is BleDeviceSnapshot.Connection.Connecting -> c.detail ?: "Conectando con la pantalla AMOLED..."
+        BleDeviceSnapshot.Connection.Idle -> "Conecta la pantalla para ver la navegación en tu manubrio."
     }
     val connectionActionTitle = when (device.connection) {
-        is BleDeviceSnapshot.Connection.Connected -> "断开连接"
-        BleDeviceSnapshot.Connection.Scanning -> "停止搜索"
-        is BleDeviceSnapshot.Connection.Connecting -> "取消连接"
-        is BleDeviceSnapshot.Connection.Failed -> "重新连接"
-        else -> "连接圆屏"
+        is BleDeviceSnapshot.Connection.Connected -> "Desconectar"
+        BleDeviceSnapshot.Connection.Scanning -> "Detener búsqueda"
+        is BleDeviceSnapshot.Connection.Connecting -> "Cancelar conexión"
+        is BleDeviceSnapshot.Connection.Failed -> "Reconectar"
+        else -> "Conectar pantalla"
     }
-    DetailScaffold("我的圆屏", onBack) { padding ->
+    DetailScaffold("Mi Pantalla AMOLED", onBack) { padding ->
         LazyColumn(Modifier.fillMaxSize().testTag("device-details-sheet"), contentPadding = padding) {
             item(key = "header") {
                 Column(
@@ -126,9 +126,9 @@ fun DeviceScreen(model: AppModel, actions: DeviceActions, onBack: () -> Unit) {
                     Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 }
             }
-            section("connection", footer = "圆屏保持开机并靠近手机。首次连接会弹出蓝牙配对请求，请点“配对”。连接成功后，当前导航会自动同步。") {
+            section("connection", footer = "Mantén la pantalla encendida cerca del celular. Al conectar por primera vez acepta la solicitud de emparejamiento Bluetooth.") {
                 StatusRow(
-                    "连接状态",
+                    "Estado de conexión",
                     Icons.Default.Bluetooth,
                     deviceStatusText(device),
                     if (device.isReady) MotoColors.Green else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -136,47 +136,47 @@ fun DeviceScreen(model: AppModel, actions: DeviceActions, onBack: () -> Unit) {
                 SectionDivider()
                 when (device.connection) {
                     BleDeviceSnapshot.Connection.PermissionRequired ->
-                        ActionRow("允许连接附近设备", Icons.Default.Bluetooth, onClick = actions.requestBluetooth)
+                        ActionRow("Permitir conexión Bluetooth", Icons.Default.Bluetooth, onClick = actions.requestBluetooth)
                     BleDeviceSnapshot.Connection.BluetoothUnavailable ->
-                        ActionRow("打开蓝牙设置", Icons.Outlined.Settings, onClick = actions.openBluetoothSettings)
+                        ActionRow("Abrir ajustes de Bluetooth", Icons.Outlined.Settings, onClick = actions.openBluetoothSettings)
                     else -> ActionRow(connectionActionTitle, Icons.Default.Bluetooth, showChevron = false, onClick = model::toggleDeviceConnection)
                 }
             }
             section(
                 "forget",
-                footer = "换了一块圆屏或配对异常时使用。若反复配对失败，请在系统蓝牙设置里删除 MOTO GPS，并在圆屏上清除配对后重试。",
+                footer = "Úsalo si cambiaste de pantalla o hay problemas de enlace. También puedes desvincular MOTO GPS en los ajustes de Bluetooth de Android.",
             ) {
-                ActionRow("忘记这块圆屏并重新搜索", Icons.Outlined.LinkOff, showChevron = false, onClick = model::forgetDevice)
+                ActionRow("Olvidar pantalla y buscar de nuevo", Icons.Outlined.LinkOff, showChevron = false, onClick = model::forgetDevice)
             }
-            section("location", header = "定位") {
+            section("location", header = "Ubicación GPS") {
                 StatusRow(
-                    "搜索位置",
+                    "Estado del GPS",
                     Icons.Default.MyLocation,
                     when (model.searchLocationStatus) {
-                        SearchLocationStatus.AVAILABLE -> "已获取"
-                        SearchLocationStatus.PREPARING -> "获取中"
-                        SearchLocationStatus.PERMISSION_DENIED -> "未获授权"
-                        SearchLocationStatus.UNAVAILABLE -> "暂不可用"
+                        SearchLocationStatus.AVAILABLE -> "Activo"
+                        SearchLocationStatus.PREPARING -> "Obteniendo..."
+                        SearchLocationStatus.PERMISSION_DENIED -> "Sin permiso"
+                        SearchLocationStatus.UNAVAILABLE -> "No disponible"
                     },
                 )
                 if (model.searchLocationStatus == SearchLocationStatus.PERMISSION_DENIED) {
                     SectionDivider()
-                    ActionRow("开启定位", Icons.Outlined.Settings, onClick = actions.requestLocation)
+                    ActionRow("Permitir ubicación", Icons.Outlined.Settings, onClick = actions.requestLocation)
                 }
             }
             section(
                 "music",
-                header = "音乐控制",
-                footer = "授权“通知使用权”后，圆屏可显示正在播放的歌曲，并控制上一首、播放/暂停、下一首。支持提供系统媒体会话的播放器，例如网易云音乐、QQ 音乐、Spotify。MOTO GPS 不读取通知内容。",
+                header = "Control de música",
+                footer = "Al permitir acceso a notificaciones, la pantalla mostrará la canción en reproducción (Spotify, etc.) y podrás pausar o cambiar de pista desde la moto.",
             ) {
                 StatusRow(
-                    "圆屏控制音乐",
+                    "Control multimedia",
                     Icons.Default.MusicNote,
-                    if (model.hasMediaAccess) "已开启" else "未开启",
+                    if (model.hasMediaAccess) "Activado" else "Desactivado",
                     if (model.hasMediaAccess) MotoColors.Green else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 SectionDivider()
-                ActionRow(if (model.hasMediaAccess) "管理通知使用权" else "开启音乐控制", Icons.Outlined.Settings, onClick = actions.openNotificationAccess)
+                ActionRow(if (model.hasMediaAccess) "Gestionar permisos de música" else "Activar control de música", Icons.Outlined.Settings, onClick = actions.openNotificationAccess)
             }
         }
     }
@@ -208,18 +208,18 @@ fun GatewaySettingsScreen(model: AppModel, onBack: () -> Unit) {
     }
 
     DetailScaffold(
-        "网关设置",
+        "Ajustes de Gateway",
         onBack = { if (!model.isUpdatingGateway) onBack() },
         actions = {
             TextButton(
                 onClick = ::save,
                 enabled = !model.isNavigationActive && !model.isUpdatingGateway && address.isNotBlank(),
                 modifier = Modifier.testTag("gateway-save-button"),
-            ) { Text("保存") }
+            ) { Text("Guardar") }
         },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().imePadding(), contentPadding = padding) {
-            section("address", header = "网关地址", footer = "填写完整的 HTTPS 根地址。例如 https://nav.example.com/moto-gps/api/，不要填高德 Key。") {
+            section("address", header = "Dirección del Gateway", footer = "Escribe la URL HTTPS completa. Por ejemplo https://tu-tunnel.trycloudflare.com") {
                 OutlinedTextField(
                     value = address,
                     onValueChange = {
@@ -228,16 +228,16 @@ fun GatewaySettingsScreen(model: AppModel, onBack: () -> Unit) {
                         checking = false
                         message = null
                     },
-                    placeholder = { Text("https://你的网关地址/") },
+                    placeholder = { Text("https://tu-gateway.com/") },
                     enabled = !model.isUpdatingGateway,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth().padding(12.dp).testTag("gateway-address-field"),
                 )
             }
-            section("check", footer = "连接测试只检查网关状态；真实搜索、导航和地图还需要相应服务可用。") {
+            section("check", footer = "La prueba de conexión verifica que el servidor responda con el proveedor Mapbox configurado.") {
                 ActionRow(
-                    "测试连接",
+                    "Probar conexión",
                     Icons.Outlined.Language,
                     enabled = !checking && !model.isUpdatingGateway && address.isNotBlank(),
                     showChevron = false,

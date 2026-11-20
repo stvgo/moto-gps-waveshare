@@ -5,6 +5,8 @@ import { setDefaultAutoSelectFamily } from "node:net";
 import { createAmapProvider } from "./amap-provider.js";
 import { createAmapPlacesProvider } from "./amap-places.js";
 import { createAmapCitiesProvider } from "./amap-cities.js";
+import { createMapboxProvider } from "./mapbox-provider.js";
+import { createMapboxPlacesProvider } from "./mapbox-places.js";
 import { createMapTileProvider } from "./map-tiles.js";
 import { transformAmapRouteOptionsV2, transformAmapRouteV2 } from "./amap-transformer.js";
 import { createGateway } from "./gateway.js";
@@ -59,7 +61,17 @@ function createDisabledProvider() {
 async function main() {
   const providerMode = process.env.MOTO_PROVIDER ?? "fixture";
   let provider;
-  if (providerMode === "amap") {
+  if (providerMode === "mapbox") {
+    const key = process.env.MAPBOX_ACCESS_TOKEN;
+    if (typeof key !== "string" || key.trim() === "") {
+      throw new Error("MAPBOX_ACCESS_TOKEN is required when MOTO_PROVIDER=mapbox");
+    }
+    const mapboxPlaces = createMapboxPlacesProvider({ key });
+    provider = {
+      ...createMapboxProvider({ key }),
+      ...mapboxPlaces,
+    };
+  } else if (providerMode === "amap") {
     const key = process.env.AMAP_WEB_SERVICE_KEY;
     if (typeof key !== "string" || key.trim() === "") {
       throw new Error("AMAP_WEB_SERVICE_KEY is required when MOTO_PROVIDER=amap");

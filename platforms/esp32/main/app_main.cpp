@@ -45,57 +45,84 @@ void demo_tick_task(void* context) {
 }
 
 void power_button_task(void*) {
-  std::uint64_t pressed_since_ms = 0;
-  // The AXP2101 needs roughly a one-second press to power the board on, so
-  // the task usually starts while the user is still holding PWR. Arm the
-  // hold-to-shutdown detector only after the line has been seen low once;
-  // otherwise the tail of the power-on press is counted as a new 3-second
-  // hold and the freshly booted unit switches itself off.
-  bool released_once = false;
+  std::uint64_t pwr_pressed_since_ms = 0;
+  bool pwr_released_once = false;
+
+  std::uint64_t boot_pressed_since_ms = 0;
+  bool boot_released_once = false;
+
   while (true) {
     const std::uint64_t now_ms =
         static_cast<std::uint64_t>(esp_timer_get_time()) / 1'000U;
+
+    // --- PWR BUTTON (GPIO3) ---
     if (!board_port_power_button_pressed()) {
-      if (!released_once) {
-        released_once = true;
+      if (!pwr_released_once) {
+        pwr_released_once = true;
         ESP_LOGI(kTag, "PWR ready: button released, hold detection armed");
       }
-      pressed_since_ms = 0;
-      vTaskDelay(pdMS_TO_TICKS(20));
-      continue;
-    }
-    if (!released_once) {
-      // Startup press still in progress; do not start the hold timer.
-      vTaskDelay(pdMS_TO_TICKS(20));
-      continue;
-    }
-    if (pressed_since_ms == 0) {
-      pressed_since_ms = now_ms;
-      ESP_LOGI(kTag, "PWR press started");
-    } else if (now_ms - pressed_since_ms >= kPowerHoldMs) {
-      ESP_LOGI(kTag, "PWR held for 3 seconds; requesting shutdown");
-      if (board_port_lock(UINT32_MAX)) {
-        moto_nav_ui_show_power_off_screen();
-        board_port_unlock();
+      if (pwr_pressed_since_ms > 0) {
+        const std::uint64_t duration = now_ms - pwr_pressed_since_ms;
+        if (duration >= 50 && duration < kPowerHoldMs) {
+          ESP_LOGI(kTag, "PWR short press: cycling AMOLED brightness");
+          board_port_cycle_brightness();
+        }
       }
-      vTaskDelay(pdMS_TO_TICKS(300));
-      const esp_err_t result = board_port_power_off();
-      if (result != ESP_OK) {
-        ESP_LOGE(kTag, "AXP2101 software power-off failed: %s",
-                 esp_err_to_name(result));
-      }
+      pwr_pressed_since_ms = 0;
+    } else if (pwr_released_once) {
+      if (pwr_pressed_since_ms == 0) {
+        pwr_pressed_since_ms = now_ms;
+        ESP_LOGI(kTag, "PWR press started");
+      } else if (now_ms - pwr_pressed_since_ms >= kPowerHoldMs) {
+        ESP_LOGI(kTag, "PWR held for 3 seconds; requesting shutdown");
+        if (board_port_lock(UINT32_MAX)) {
+          moto_nav_ui_show_power_off_screen();
+          board_port_unlock();
+        }
+        vTaskDelay(pdMS_TO_TICKS(300));
+        const esp_err_t result = board_port_power_off();
+        if (result != ESP_OK) {
+          ESP_LOGE(kTag, "AXP2101 software power-off failed: %s",
+                   esp_err_to_name(result));
+        }
 
-      // AXP2101 should remove the switched rails here. If this particular
-      // board remains alive while USB is attached, blank the panel and enter
-      // deep sleep after key release. GPIO3 high wakes it on the next press.
-      vTaskDelay(pdMS_TO_TICKS(500));
-      while (board_port_power_button_pressed()) {
-        vTaskDelay(pdMS_TO_TICKS(20));
+        // AXP2101 should remove the switched rails here. If this particular
+        // board remains alive while USB is attached, blank the panel and enter
+        // deep sleep after key release. GPIO3 high wakes it on the next press.
+        vTaskDelay(pdMS_TO_TICKS(500));
+        while (board_port_power_button_pressed()) {
+          vTaskDelay(pdMS_TO_TICKS(20));
+        }
+        ESP_ERROR_CHECK(esp_sleep_enable_ext1_wakeup_io(
+            1ULL << 3, ESP_EXT1_WAKEUP_ANY_HIGH));
+        esp_deep_sleep_start();
       }
-      ESP_ERROR_CHECK(esp_sleep_enable_ext1_wakeup_io(
-          1ULL << 3, ESP_EXT1_WAKEUP_ANY_HIGH));
-      esp_deep_sleep_start();
     }
+
+    // --- BOOT BUTTON (GPIO0) ---
+    if (!board_port_boot_button_pressed()) {
+      if (!boot_released_once) {
+        boot_released_once = true;
+      }
+      if (boot_pressed_since_ms > 0) {
+        const std::uint64_t duration = now_ms - boot_pressed_since_ms;
+        if (duration >= 50 && duration < 1200) {
+          ESP_LOGI(kTag, "BOOT button clicked: switching to next screen page");
+          if (board_port_lock(UINT32_MAX)) {
+            moto_ui_page_t current = moto_nav_ui_get_page();
+            auto next = static_cast<moto_ui_page_t>((static_cast<int>(current) + 1) % MOTO_UI_PAGE_COUNT);
+            moto_nav_ui_set_page(next);
+            board_port_unlock();
+          }
+        }
+      }
+      boot_pressed_since_ms = 0;
+    } else if (boot_released_once) {
+      if (boot_pressed_since_ms == 0) {
+        boot_pressed_since_ms = now_ms;
+      }
+    }
+
     vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
@@ -175,7 +202,7 @@ extern "C" void app_main(void) {
   static const moto::nav::NavSnapshot initial_snapshot{};
   presenter.update(initial_snapshot);
   presenter.apply_to_lvgl();
-  moto_nav_ui_set_music_page_enabled(0);
+  moto_nav_ui_set_music_page_enabled(1);
   phone_bridge.install_ui_callbacks();
   board_port_unlock();
 

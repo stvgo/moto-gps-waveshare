@@ -157,9 +157,9 @@ class AppModel(private val context: Context) {
             searchLocationStatus = status
             if (isPlanningRoutePreview && routePreviewJob == null && searchLocation.latestPoint == null) {
                 if (status == SearchLocationStatus.PERMISSION_DENIED) {
-                    failRoutePreview("需要当前位置才能规划路线，请在系统设置中允许定位")
+                    failRoutePreview("Se requiere permiso de ubicación para calcular la ruta")
                 } else if (status == SearchLocationStatus.UNAVAILABLE) {
-                    failRoutePreview("暂时无法获取当前位置，请到开阔位置后重试")
+                    failRoutePreview("No se pudo obtener la ubicación GPS actual")
                 }
             }
         }
@@ -211,45 +211,45 @@ class AppModel(private val context: Context) {
 
     val primaryActionTitle: String
         get() = when {
-            isNavigationActive -> "结束导航"
-            isPlanningRoutePreview -> "正在规划路线"
-            selectedPlace == null -> "请先选择终点"
-            selectedRoutePreview == null -> "重新规划路线"
-            else -> "开始导航"
+            isNavigationActive -> "Finalizar navegación"
+            isPlanningRoutePreview -> "Calculando ruta..."
+            selectedPlace == null -> "Elige un destino"
+            selectedRoutePreview == null -> "Recalcular ruta"
+            else -> "Iniciar navegación"
         }
 
     val activeDestinationName: String
-        get() = if (isDemoActive) "MOTO GPS 演示路线" else selectedPlace?.name ?: "目的地"
+        get() = if (isDemoActive) "Ruta de demostración" else selectedPlace?.name ?: "Destino"
 
     val phaseDetail: String
         get() {
             navigationFailure?.let { return it }
             if (isDemoActive && navigation.stateName == "navigating") {
-                return if (deviceReady) "真实济南路网正在同步 · ${JinanDemoFixture.ROAD_ATTRIBUTION}"
-                else "真实济南路网运行中 · ${JinanDemoFixture.ROAD_ATTRIBUTION}"
+                return if (deviceReady) "Ruta demo sincronizada · ${JinanDemoFixture.ROAD_ATTRIBUTION}"
+                else "Ruta demo en ejecución · ${JinanDemoFixture.ROAD_ATTRIBUTION}"
             }
             return when (navigation.stateName) {
-                "acquiring" -> "请保持精确定位开启"
-                "planning" -> "正在读取高德实时路线与路况"
-                "navigating" -> if (deviceReady) "手机可以锁屏并放入口袋" else "手机继续导航，圆屏连接后自动同步"
-                "rerouting" -> "新路线生成后会自动同步到圆屏"
-                "arrived" -> "本次导航已经完成"
-                else -> "选择终点后，路线会通过蓝牙发送到圆屏"
+                "acquiring" -> "Buscando señal GPS..."
+                "planning" -> "Calculando ruta y tráfico en tiempo real..."
+                "navigating" -> if (deviceReady) "Navegación activa · Pantalla AMOLED sincronizada" else "Navegando · Sincronizando con pantalla..."
+                "rerouting" -> "Recalculando nueva ruta..."
+                "arrived" -> "¡Has llegado a tu destino!"
+                else -> "Selecciona un destino para comenzar"
             }
         }
 
     val searchScopeText: String
         get() = when (searchLocationStatus) {
-            SearchLocationStatus.AVAILABLE -> "已按当前位置优先排序"
-            SearchLocationStatus.PREPARING -> "正在获取当前位置；暂按全国搜索"
-            SearchLocationStatus.PERMISSION_DENIED -> "未获定位权限；暂按全国搜索"
-            SearchLocationStatus.UNAVAILABLE -> "当前位置暂不可用；暂按全国搜索"
+            SearchLocationStatus.AVAILABLE -> "Ordenado por cercanía a tu ubicación"
+            SearchLocationStatus.PREPARING -> "Obteniendo ubicación GPS..."
+            SearchLocationStatus.PERMISSION_DENIED -> "Sin permiso de ubicación"
+            SearchLocationStatus.UNAVAILABLE -> "Ubicación GPS no disponible"
         }
 
     // ------------------------------------------------------------- gateway
 
     suspend fun saveGatewayAddress(address: String) {
-        if (isNavigationActive || isUpdatingGateway) throw IllegalStateException("请先结束导航，再更换网关地址。")
+        if (isNavigationActive || isUpdatingGateway) throw IllegalStateException("Finaliza la navegación antes de cambiar el gateway.")
         val url = GatewayConfiguration.normalizedUrl(address)
         isUpdatingGateway = true
         try {
@@ -268,11 +268,11 @@ class AppModel(private val context: Context) {
         return try {
             val health = GatewayClient(url).health()
             if (health.status != "ok") throw IllegalStateException()
-            if (health.readyForLiveNavigation) "网关已连接，已启用实时导航配置。" else "网关已连接，但尚未启用实时导航。请检查服务端配置。"
+            if (health.readyForLiveNavigation) "Gateway conectado: navegación en tiempo real lista." else "Gateway conectado, pero la navegación en tiempo real no está activa."
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
-            "连接失败，请检查地址、HTTPS 证书和网关是否已启动。"
+            "Error de conexión. Verifica la URL y que el gateway esté activo."
         }
     }
 
@@ -341,7 +341,7 @@ class AppModel(private val context: Context) {
         if (isUpdatingGateway || client == null || !isGatewayConfigured) {
             placeResults = emptyList()
             isSearchingPlaces = false
-            if (query.length >= 2) placeSearchFailure = "请先在网关设置中填写服务地址"
+            if (query.length >= 2) placeSearchFailure = "Configura la dirección del gateway en Ajustes"
             return
         }
         if (query.length < 2 || selectedPlace?.name == query) {
@@ -360,13 +360,13 @@ class AppModel(private val context: Context) {
                 if (destinationQuery.trim() != query) return@launch
                 placeResults = deduplicated(places)
                 isSearchingPlaces = false
-                placeSearchFailure = if (placeResults.isEmpty()) "没有找到，试试输入更完整的地点名" else null
+                placeSearchFailure = if (placeResults.isEmpty()) "No se encontraron resultados para esta búsqueda" else null
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
                 placeResults = emptyList()
                 isSearchingPlaces = false
-                placeSearchFailure = "地点搜索失败，请检查网络后重试"
+                placeSearchFailure = "Error al buscar lugares; verifica tu conexión"
             }
         }
     }
@@ -382,7 +382,7 @@ class AppModel(private val context: Context) {
     fun planRoutePreview() {
         if (isNavigationActive || isUpdatingGateway || selectedPlace == null) return
         if (!isGatewayConfigured) {
-            failRoutePreview("请先在网关设置中填写服务地址")
+            failRoutePreview("Configura la dirección del gateway en Ajustes")
             return
         }
         routePreviewGeneration += 1
@@ -396,7 +396,7 @@ class AppModel(private val context: Context) {
         isPlanningRoutePreview = true
 
         if (searchLocationStatus == SearchLocationStatus.PERMISSION_DENIED) {
-            failRoutePreview("需要当前位置才能规划路线，请在系统设置中允许定位")
+            failRoutePreview("Se requiere permiso de ubicación para calcular la ruta")
             return
         }
         // Always wait for a new fix: reusing the search-bias location can build
@@ -428,7 +428,7 @@ class AppModel(private val context: Context) {
                 val candidates = routes.mapIndexed { index, route -> RoutePreviewCandidate(index, route) }
                 val first = candidates.firstOrNull()
                 if (first == null) {
-                    failRoutePreview("高德没有返回可用路线，请稍后重试")
+                    failRoutePreview("No se encontraron rutas disponibles")
                     return@launch
                 }
                 routePreviewCandidates = candidates
@@ -439,7 +439,7 @@ class AppModel(private val context: Context) {
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                failRoutePreview("路线规划失败，请检查网络后重试")
+                failRoutePreview("Error al calcular la ruta; verifica tu conexión")
             } finally {
                 if (routePreviewGeneration == generation) routePreviewJob = null
             }
@@ -480,19 +480,19 @@ class AppModel(private val context: Context) {
     fun startNavigation() {
         val client = gatewayClient
         if (isUpdatingGateway || client == null || !isGatewayConfigured) {
-            navigationFailure = "请先在网关设置中填写服务地址"
+            navigationFailure = "Configura la dirección del gateway en Ajustes"
             return
         }
         val place = selectedPlace ?: run {
-            navigationFailure = "请先从搜索结果中选择终点"
+            navigationFailure = "Selecciona un destino antes de iniciar"
             return
         }
         val preview = selectedRoutePreview ?: run {
-            navigationFailure = "请先完成路线规划并选择一条路线"
+            navigationFailure = "Selecciona una de las rutas disponibles"
             return
         }
         val origin = routePreviewOrigin ?: run {
-            navigationFailure = "路线起点已失效，请重新规划路线"
+            navigationFailure = "La ubicación GPS cambió; recalculando ruta..."
             planRoutePreview()
             return
         }

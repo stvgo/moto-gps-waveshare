@@ -31,3 +31,12 @@ backups/
 
 # Local Cloudflare emulator state (also when tests run from the repository root)
 .wrangler/
+
+# Rust
+target/
+**/target/
+
+# Android
+.gradle/
+**/build/
+

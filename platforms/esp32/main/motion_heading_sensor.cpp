@@ -79,7 +79,7 @@ esp_err_t MotionHeadingSensor::start(SampleCallback callback, void* context) {
   // Sensor callbacks reach the presenter and LVGL adapter. Keep enough margin
   // for those nested frames even though the large map snapshot now remains in
   // PhoneNavBridge member storage.
-  if (xTaskCreate(task_entry, "moto_qmi_heading", 8'192, this, 3, nullptr) !=
+  if (xTaskCreate(task_entry, "moto_qmi_heading", 4'096, this, 3, nullptr) !=
       pdPASS) {
     callback_ = nullptr;
     callback_context_ = nullptr;

@@ -653,15 +653,20 @@ void NavCore::update_derived_route_fields() {
     view_.remaining_duration_s = 0;
   }
 
+  // Motorcycle GNSS fix delay compensation: at 36 km/h (10 m/s), a ~0.75s GPS+BLE
+  // pipeline latency lags ~7.5 meters behind physical position.
+  const double latency_lead_m = std::max(0.0, static_cast<double>(view_.speed_mps) * 0.75);
+  const double effective_progress_m = view_.route_progress_m + latency_lead_m;
+
   view_.has_next_maneuver = false;
   view_.distance_to_next_maneuver_m = 0.0;
   for (const Maneuver& maneuver : route_.maneuvers) {
-    if (maneuver.route_offset_m + 1.0 >= view_.route_progress_m) {
+    const double raw_distance = maneuver.route_offset_m - effective_progress_m;
+    // Advance to next turn when within 3.5 meters of apex
+    if (raw_distance > 3.5) {
       view_.has_next_maneuver = true;
       view_.next_maneuver = maneuver;
-      view_.distance_to_next_maneuver_m =
-          std::max(0.0,
-                   maneuver.route_offset_m - view_.route_progress_m);
+      view_.distance_to_next_maneuver_m = raw_distance;
       break;
     }
   }

@@ -18,6 +18,10 @@
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
+#ifndef BLE_GATT_CHR_F_NOTIFY_INDICATE_ENC
+#define BLE_GATT_CHR_F_NOTIFY_INDICATE_ENC 0
+#endif
+
 extern "C" void ble_store_config_init(void);
 
 namespace {

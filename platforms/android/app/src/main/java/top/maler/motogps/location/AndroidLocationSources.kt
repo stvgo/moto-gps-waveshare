@@ -70,9 +70,8 @@ class AndroidNavigationLocationSource(private val context: Context) : Navigation
         this.onFix = onFix
         this.onFailure = onFailure
         running = true
-        // No distance filter: with a 0 m filter fixes keep arriving while
-        // parked, so the round-screen speed decays to zero.
-        manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1_000L, 0f, listener, Looper.getMainLooper())
+        // Request high-rate 300ms GNSS updates for fast response on motorbikes
+        manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 300L, 0f, listener, Looper.getMainLooper())
         if (manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2_000L, 0f, listener, Looper.getMainLooper())
         }
