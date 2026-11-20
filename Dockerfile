@@ -11,6 +11,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y ca-certificates libssl3 curl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/moto-gps-backend /app/moto-gps-backend
 COPY backend-rs/app-debug.apk /app/app-debug.apk
-ENV PORT=8787
+ENV PORT=8080
+EXPOSE 8080
 EXPOSE 8787
 CMD ["/app/moto-gps-backend"]

@@ -141,6 +141,7 @@ async fn main() {
     });
 
     let app = Router::new()
+        .route("/", get(root_handler))
         .route("/healthz", get(healthz))
         .route("/v1/places", get(search_places))
         .route("/v1/route-options", post(route_options))
@@ -150,16 +151,77 @@ async fn main() {
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    let port: u16 = env::var("PORT")
+    let env_port: Option<u16> = env::var("PORT")
         .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(8787);
+        .and_then(|p| p.parse().ok());
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    info!("🚀 MOTO GPS Rust Backend running on http://{}", addr);
+    let mut ports: Vec<u16> = Vec::new();
+    if let Some(p) = env_port {
+        ports.push(p);
+    }
+    for p in [8080, 8787] {
+        if !ports.contains(&p) {
+            ports.push(p);
+        }
+    }
 
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let mut handles = Vec::new();
+    for port in ports {
+        let addr = SocketAddr::from(([0, 0, 0, 0], port));
+        let app_clone = app.clone();
+        match tokio::net::TcpListener::bind(addr).await {
+            Ok(listener) => {
+                info!("🚀 MOTO GPS Rust Backend running on http://{}", addr);
+                handles.push(tokio::spawn(async move {
+                    let _ = axum::serve(listener, app_clone).await;
+                }));
+            }
+            Err(e) => {
+                info!("Port {} not available or could not bind (skipping): {}", port, e);
+            }
+        }
+    }
+
+    if handles.is_empty() {
+        panic!("Failed to bind to any HTTP port!");
+    }
+
+    std::future::pending::<()>().await;
+}
+
+async fn root_handler() -> impl IntoResponse {
+    axum::response::Html(r#"<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOTO GPS Gateway</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 32px; max-width: 520px; width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.5); text-align: center; }
+        h1 { color: #58a6ff; margin-top: 0; font-size: 26px; }
+        .badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; background: #238636; color: #fff; margin-bottom: 20px; }
+        p { color: #8b949e; line-height: 1.6; }
+        .endpoints { text-align: left; background: #0d1117; border-radius: 8px; padding: 14px 18px; margin: 20px 0; font-family: monospace; font-size: 13px; }
+        .btn { display: inline-block; background: #238636; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; transition: background 0.2s; margin-top: 10px; }
+        .btn:hover { background: #2ea043; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🏍️ MOTO GPS Gateway</h1>
+        <div class="badge">● Online (Rust Axum Engine)</div>
+        <p>Servidor de navegación de alta velocidad para Waveshare ESP32-S3 y teléfonos móviles.</p>
+        <div class="endpoints">
+            <div>🟢 <strong>GET</strong> /healthz - Estado y diagnóstico</div>
+            <div>🟢 <strong>GET</strong> /v1/places - Búsqueda de lugares</div>
+            <div>🟢 <strong>POST</strong> /v1/routes - Cálculo de rutas Mapbox</div>
+            <div>📲 <strong>GET</strong> /moto-gps.apk - Descarga directa del APK</div>
+        </div>
+        <a class="btn" href="/moto-gps.apk">📲 Descargar App Android (APK)</a>
+    </div>
+</body>
+</html>"#)
 }
 
 async fn healthz() -> impl IntoResponse {
