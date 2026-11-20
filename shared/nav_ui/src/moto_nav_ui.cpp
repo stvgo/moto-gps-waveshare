@@ -1383,7 +1383,7 @@ void update_nav_status(const moto_ui_state_t *state) {
         lv_obj_set_style_text_font(ui.nav_status, &lv_font_montserrat_28, 0);
         lv_obj_set_width(ui.nav_status, px(340));
         lv_obj_align(ui.nav_status, LV_ALIGN_TOP_MID, 0, px(20));
-        lv_label_set_text(ui.nav_status, "¡LLEGASTE!");
+        lv_label_set_text(ui.nav_status, "LLEGASTE!");
         lv_obj_set_style_text_color(ui.nav_status, kGreen, 0);
         return;
     }
@@ -1394,7 +1394,7 @@ void update_nav_status(const moto_ui_state_t *state) {
         case MOTO_UI_ACQUIRING_FIX: text = "ACQUIRING GPS"; color = kAmber; break;
         case MOTO_UI_REROUTING: text = "REROUTING"; color = kAmber; break;
         case MOTO_UI_OFFLINE: text = "ROUTE CACHED"; color = kQuiet; break;
-        case MOTO_UI_ARRIVED: text = "¡LLEGASTE!"; color = kGreen; break;
+        case MOTO_UI_ARRIVED: text = "LLEGASTE!"; color = kGreen; break;
         case MOTO_UI_NAVIGATING:
             if(state->online == 0) text = "NO HOTSPOT";
             break;
