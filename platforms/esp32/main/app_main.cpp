@@ -102,26 +102,19 @@ void buttons_task(void* context) {
     }
 
     // --- BOOT BUTTON (GPIO0, Active-LOW) ---
-    if (!board_port_boot_button_pressed()) {
-      if (!boot_released_once) {
-        boot_released_once = true;
-        ESP_LOGI(kTag, "BOOT button ready");
-      }
-      if (boot_pressed_since_ms > 0) {
-        const std::uint64_t duration = now_ms - boot_pressed_since_ms;
-        if (duration >= 50 && duration < 1200) {
-          ESP_LOGI(kTag, "BOOT clicked: cycling page via PhoneNavBridge");
-          if (bridge != nullptr) {
-            bridge->cycle_page();
-          }
-        }
-      }
-      boot_pressed_since_ms = 0;
-    } else if (boot_released_once) {
+    if (board_port_boot_button_pressed()) {
       if (boot_pressed_since_ms == 0) {
         boot_pressed_since_ms = now_ms;
-        ESP_LOGI(kTag, "BOOT press detected");
+      } else if (!boot_released_once && (now_ms - boot_pressed_since_ms >= 40)) {
+        boot_released_once = true; // Acts as handled flag while held
+        ESP_LOGI(kTag, "BOOT clicked: cycling page via PhoneNavBridge");
+        if (bridge != nullptr) {
+          bridge->cycle_page();
+        }
       }
+    } else {
+      boot_pressed_since_ms = 0;
+      boot_released_once = false;
     }
 
     vTaskDelay(pdMS_TO_TICKS(25));

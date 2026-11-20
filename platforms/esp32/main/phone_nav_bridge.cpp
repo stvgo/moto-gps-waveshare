@@ -343,7 +343,7 @@ void PhoneNavBridge::on_link_state(bool active) {
       clear_map_context(phone_snapshot);
       heading_fusion_.reset();
       last_motion_present_ms_ = 0;
-      music_page_enabled_ = false;
+      music_page_enabled_ = true;
       media_state_ = {};
       media_state_.source_name = "iPhone";
       media_state_.track_title = "等待连接";
@@ -397,11 +397,12 @@ void PhoneNavBridge::fill_demo_snapshot(moto::nav::NavSnapshot& output,
                                         phase_ms / 1'000.0 * kDemoSpeedMps);
   const DemoPose rider = demo_pose(progress);
 
+  const auto current_page = output.display_page;
   output = {};
   output.state = arrived ? moto::nav::NavState::Arrived
                          : moto::nav::NavState::Navigating;
   output.network = moto::nav::NetworkState::Online;
-  output.display_page = moto::nav::DisplayPage::Navigation;
+  output.display_page = current_page;
   output.has_destination = true;
   output.has_usable_fix = true;
   output.gnss_stale = false;

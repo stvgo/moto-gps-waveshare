@@ -997,7 +997,12 @@ extern "C" esp_err_t board_port_set_brightness(uint8_t percent) {
     return ESP_ERR_INVALID_STATE;
   }
   uint8_t level = percent > 100 ? 100 : percent;
-  return esp_lcd_panel_co5300_set_brightness(panel, level);
+  if (!board_port_lock(300)) {
+    return ESP_ERR_TIMEOUT;
+  }
+  esp_err_t ret = esp_lcd_panel_co5300_set_brightness(panel, level);
+  board_port_unlock();
+  return ret;
 }
 
 extern "C" uint8_t board_port_cycle_brightness(void) {
