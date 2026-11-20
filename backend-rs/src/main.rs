@@ -38,10 +38,26 @@ struct RouteRequest {
     is_reroute: Option<bool>,
 }
 
+fn default_coordinate_system() -> String {
+    "WGS84".to_string()
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct Point {
+    #[serde(default = "default_coordinate_system")]
+    coordinate_system: String,
     longitude_deg: f64,
     latitude_deg: f64,
+}
+
+impl Point {
+    fn new(longitude_deg: f64, latitude_deg: f64) -> Self {
+        Self {
+            coordinate_system: "WGS84".to_string(),
+            longitude_deg,
+            latitude_deg,
+        }
+    }
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -256,7 +272,7 @@ async fn search_places(
     }
 
     let origin = match (params.origin_lon, params.origin_lat) {
-        (Some(lon), Some(lat)) => Some(Point { longitude_deg: lon, latitude_deg: lat }),
+        (Some(lon), Some(lat)) => Some(Point::new(lon, lat)),
         _ => None,
     };
 
@@ -328,10 +344,7 @@ async fn search_photon(
         if coords.len() < 2 {
             continue;
         }
-        let pt = Point {
-            longitude_deg: coords[0].as_f64()?,
-            latitude_deg: coords[1].as_f64()?,
-        };
+        let pt = Point::new(coords[0].as_f64()?, coords[1].as_f64()?);
 
         let name = props
             .get("name")
@@ -396,10 +409,7 @@ async fn search_mapbox(
         if center.len() < 2 {
             continue;
         }
-        let pt = Point {
-            longitude_deg: center[0].as_f64()?,
-            latitude_deg: center[1].as_f64()?,
-        };
+        let pt = Point::new(center[0].as_f64()?, center[1].as_f64()?);
         let name = f.get("text").and_then(|v| v.as_str()).unwrap_or("");
         let place_name = f.get("place_name").and_then(|v| v.as_str()).unwrap_or("");
         let id = f.get("id").and_then(|v| v.as_str()).unwrap_or("");
@@ -500,7 +510,7 @@ async fn fetch_mapbox_routes(
         if let Some(coords) = r.get("geometry").and_then(|g| g.get("coordinates")).and_then(|c| c.as_array()) {
             for c in coords {
                 if let (Some(lon), Some(lat)) = (c.get(0).and_then(|v| v.as_f64()), c.get(1).and_then(|v| v.as_f64())) {
-                    polyline.push(Point { longitude_deg: lon, latitude_deg: lat });
+                    polyline.push(Point::new(lon, lat));
                 }
             }
         }

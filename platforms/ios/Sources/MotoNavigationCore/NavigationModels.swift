@@ -11,6 +11,26 @@ public struct WGS84Point: Codable, Hashable, Sendable {
         self.latitudeDeg = latitudeDeg
     }
 
+    public init(coordinateSystem: String = "WGS84", longitudeDeg: Double, latitudeDeg: Double) {
+        self.coordinateSystem = coordinateSystem
+        self.longitudeDeg = longitudeDeg
+        self.latitudeDeg = latitudeDeg
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.coordinateSystem = try container.decodeIfPresent(String.self, forKey: .coordinateSystem) ?? "WGS84"
+        self.longitudeDeg = try container.decode(Double.self, forKey: .longitudeDeg)
+        self.latitudeDeg = try container.decode(Double.self, forKey: .latitudeDeg)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(coordinateSystem, forKey: .coordinateSystem)
+        try container.encode(longitudeDeg, forKey: .longitudeDeg)
+        try container.encode(latitudeDeg, forKey: .latitudeDeg)
+    }
+
     public var isValid: Bool {
         longitudeDeg.isFinite && latitudeDeg.isFinite &&
             (-180 ... 180).contains(longitudeDeg) &&
