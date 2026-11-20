@@ -1,0 +1,81 @@
+name: Build iOS Sideload IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Crear GitHub Release con el IPA'
+        required: false
+        type: boolean
+        default: false
+  push:
+    branches:
+      - main
+    paths:
+      - 'platforms/ios/**'
+      - 'shared/**'
+      - 'scripts/ios/**'
+      - '.github/workflows/build-ipa.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ipa:
+    name: Build Unsigned iOS IPA
+    runs-on: macos-14
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          XCODE_APP=$(ls -d /Applications/Xcode_16*.app /Applications/Xcode_15*.app /Applications/Xcode.app 2>/dev/null | head -n 1)
+          if [ -n "$XCODE_APP" ]; then
+            echo "Using $XCODE_APP"
+            sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Install xcodegen
+        run: |
+          if ! command -v xcodegen &> /dev/null; then
+            brew install xcodegen
+          fi
+          xcodegen --version
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./scripts/ios/build_sideload_ipa.sh
+          chmod +x ./scripts/ios/verify_sideload_ipa.py
+
+      - name: Build Sideload IPA
+        run: |
+          ./scripts/ios/build_sideload_ipa.sh
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moto-gps-sideload-ipa
+          path: |
+            build/sideload/*.ipa
+            build/sideload/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: ${{ github.event.inputs.create_release == 'true' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/sideload/*.ipa
+            build/sideload/SHA256SUMS.txt
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
