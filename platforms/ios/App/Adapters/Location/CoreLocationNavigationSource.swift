@@ -46,7 +46,7 @@ final class CoreLocationNavigationSource: NSObject, NavigationLocationSource {
         case .restricted, .denied:
             throw NavigationSourceError.permissionDenied
         @unknown default:
-            throw NavigationSourceError.unavailable("当前系统无法确认定位权限")
+            throw NavigationSourceError.unavailable("No se pudo verificar el permiso de ubicación")
         }
     }
 
@@ -65,11 +65,11 @@ extension CoreLocationNavigationSource: @preconcurrency CLLocationManagerDelegat
         case .authorizedAlways, .authorizedWhenInUse:
             manager.startUpdatingLocation()
         case .restricted, .denied:
-            onFailure?("定位权限已关闭，请在系统设置中允许“始终”定位")
+            onFailure?("Permiso de ubicación denegado. Permite ubicación 'Siempre' en Ajustes.")
         case .notDetermined:
             break
         @unknown default:
-            onFailure?("当前系统无法确认定位权限")
+            onFailure?("No se pudo verificar el permiso de ubicación")
         }
     }
 

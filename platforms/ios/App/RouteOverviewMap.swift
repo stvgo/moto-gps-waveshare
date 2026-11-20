@@ -74,7 +74,7 @@ struct RouteOverviewMap: UIViewRepresentable {
                 latitude: origin.latitudeDeg,
                 longitude: origin.longitudeDeg
             )
-            annotation.title = "当前位置"
+            annotation.title = "Ubicación actual"
             annotation.subtitle = "moto-start"
             mapView.addAnnotation(annotation)
             allCoordinates.append(annotation.coordinate)
@@ -85,7 +85,7 @@ struct RouteOverviewMap: UIViewRepresentable {
             latitude: destination.latitudeDeg,
             longitude: destination.longitudeDeg
         )
-        destinationAnnotation.title = "目的地"
+        destinationAnnotation.title = "Destino"
         destinationAnnotation.subtitle = "moto-finish"
         mapView.addAnnotation(destinationAnnotation)
         allCoordinates.append(destinationAnnotation.coordinate)

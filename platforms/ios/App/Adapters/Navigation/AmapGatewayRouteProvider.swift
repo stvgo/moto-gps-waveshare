@@ -9,11 +9,11 @@ enum AmapGatewayError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidEndpoint:
-            "路线网关地址无效"
+            "Dirección del servidor de rutas no válida"
         case let .rejected(code, message):
-            "\(message)（\(code)）"
+            "\(message) (\(code))"
         case .invalidResponse:
-            "路线网关返回了无法识别的数据"
+            "El servidor de rutas devolvió una respuesta no válida"
         }
     }
 }

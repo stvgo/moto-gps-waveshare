@@ -94,9 +94,9 @@ final class AppModel: ObservableObject {
                   self.searchLocation.latestPoint == nil
             else { return }
             if status == .permissionDenied {
-                self.failRoutePreview("需要当前位置才能规划路线，请在系统设置中允许定位")
+                self.failRoutePreview("Se requiere permiso de ubicación para calcular la ruta.")
             } else if status == .unavailable {
-                self.failRoutePreview("暂时无法获取当前位置，请到开阔位置后重试")
+                self.failRoutePreview("No se pudo obtener la ubicación GPS actual.")
             }
         }
 
@@ -175,14 +175,14 @@ final class AppModel: ObservableObject {
     }
 
     var phaseTitle: String {
-        if navigationFailure != nil { return "导航需要处理" }
+        if navigationFailure != nil { return "Atención a la navegación" }
         switch navigation.stateName {
-        case "acquiring": return isDemoActive ? "演示即将开始" : "正在获取位置"
-        case "planning": return "正在规划路线"
-        case "navigating": return isDemoActive ? "正在演示导航" : "导航已发送到圆屏"
-        case "rerouting": return "偏航，正在重新规划"
-        case "arrived": return isDemoActive ? "演示完成" : "已经到达"
-        default: return "准备出发"
+        case "acquiring": return isDemoActive ? "Iniciando demo..." : "Obteniendo GPS..."
+        case "planning": return "Calculando ruta..."
+        case "navigating": return isDemoActive ? "Modo Demo Activo" : "Navegación en curso"
+        case "rerouting": return "Recalculando ruta..."
+        case "arrived": return isDemoActive ? "Demo finalizada" : "¡Has llegado!"
+        default: return "Listo para rodar"
         }
     }
 
@@ -190,16 +190,16 @@ final class AppModel: ObservableObject {
         if let navigationFailure { return navigationFailure }
         if isDemoActive, navigation.stateName == "navigating" {
             return deviceReady
-                ? "真实济南路网正在同步 · 道路 © OpenStreetMap contributors"
-                : "真实济南路网运行中 · 道路 © OpenStreetMap contributors"
+                ? "Simulación sincronizada con la pantalla"
+                : "Simulación activa en el teléfono"
         }
         switch navigation.stateName {
-        case "acquiring": return "请保持精确定位开启"
-        case "planning": return "正在读取高德实时路线与路况"
-        case "navigating": return deviceReady ? "手机可以锁屏并放入口袋" : "手机继续导航，圆屏连接后自动同步"
-        case "rerouting": return "新路线生成后会自动同步到圆屏"
-        case "arrived": return "本次导航已经完成"
-        default: return "选择终点后，路线会通过蓝牙发送到圆屏"
+        case "acquiring": return "Mantén la ubicación precisa activada"
+        case "planning": return "Consultando ruta y tráfico en el servidor"
+        case "navigating": return deviceReady ? "Pantalla conectada. Puedes bloquear el iPhone." : "Navegando en el teléfono"
+        case "rerouting": return "La nueva ruta se sincronizará con la pantalla"
+        case "arrived": return "Ruta completada"
+        default: return "Selecciona un destino para enviar la ruta a la pantalla"
         }
     }
 
@@ -212,27 +212,27 @@ final class AppModel: ObservableObject {
     }
 
     var primaryActionTitle: String {
-        if isNavigationActive { return "结束导航" }
-        if isPlanningRoutePreview { return "正在规划路线" }
-        if selectedPlace == nil { return "请先选择终点" }
-        if selectedRoutePreview == nil { return "重新规划路线" }
-        return "开始导航"
+        if isNavigationActive { return "Finalizar navegación" }
+        if isPlanningRoutePreview { return "Calculando ruta..." }
+        if selectedPlace == nil { return "Selecciona un destino" }
+        if selectedRoutePreview == nil { return "Recalcular ruta" }
+        return "Iniciar Navegación"
     }
 
     var activeDestinationName: String {
-        isDemoActive ? "MOTO GPS 演示路线" : (selectedPlace?.name ?? "目的地")
+        isDemoActive ? "Ruta de Demo" : (selectedPlace?.name ?? "Destino")
     }
 
     var searchScopeText: String {
         switch searchLocationStatus {
         case .available:
-            return "已按当前位置优先排序"
+            return "Priorizando lugares cercanos a ti"
         case .preparing:
-            return "正在获取当前位置；暂按全国搜索"
+            return "Obteniendo ubicación actual..."
         case .permissionDenied:
-            return "未获定位权限；暂按全国搜索"
+            return "Sin permiso de ubicación; búsqueda general"
         case .unavailable:
-            return "当前位置暂不可用；暂按全国搜索"
+            return "Ubicación no disponible; búsqueda general"
         }
     }
 
@@ -305,19 +305,19 @@ final class AppModel: ObservableObject {
 
     func startNavigation() {
         guard !isUpdatingGateway, isGatewayConfigured else {
-            navigationFailure = "请先在网关设置中填写服务地址"
+            navigationFailure = "Configura la dirección del servidor en ajustes"
             return
         }
         guard let selectedPlace else {
-            navigationFailure = "请先从搜索结果中选择终点"
+            navigationFailure = "Selecciona un destino de la búsqueda"
             return
         }
         guard let selectedRoutePreview else {
-            navigationFailure = "请先完成路线规划并选择一条路线"
+            navigationFailure = "Calcula y selecciona una ruta primero"
             return
         }
         guard let routePreviewOrigin else {
-            navigationFailure = "路线起点已失效，请重新规划路线"
+            navigationFailure = "Ubicación de origen no válida. Recalcula la ruta."
             planRoutePreview()
             return
         }
@@ -397,7 +397,7 @@ final class AppModel: ObservableObject {
     func planRoutePreview() {
         guard !isNavigationActive, !isUpdatingGateway, selectedPlace != nil else { return }
         guard isGatewayConfigured else {
-            failRoutePreview("请先在网关设置中填写服务地址")
+            failRoutePreview("Configura la dirección del servidor en ajustes")
             return
         }
         routePreviewGeneration &+= 1
@@ -411,7 +411,7 @@ final class AppModel: ObservableObject {
         isPlanningRoutePreview = true
 
         if searchLocationStatus == .permissionDenied {
-            failRoutePreview("需要当前位置才能规划路线，请在系统设置中允许定位")
+            failRoutePreview("Se requiere permiso de ubicación para calcular la ruta")
             return
         }
         if searchLocation.refreshForRoutePlanning() {
@@ -481,7 +481,7 @@ final class AppModel: ObservableObject {
                     RoutePreviewCandidate(ordinal: $0.offset, route: $0.element)
                 }
                 guard let first = candidates.first else {
-                    self.failRoutePreview("高德没有返回可用路线，请稍后重试")
+                    self.failRoutePreview("No se encontraron rutas disponibles")
                     return
                 }
                 self.routePreviewCandidates = candidates
@@ -493,7 +493,7 @@ final class AppModel: ObservableObject {
                 return
             } catch {
                 guard let self, !Task.isCancelled else { return }
-                self.failRoutePreview("路线规划失败，请检查网络后重试")
+                self.failRoutePreview("Error al calcular la ruta. Revisa tu conexión.")
             }
         }
     }
@@ -526,7 +526,7 @@ final class AppModel: ObservableObject {
         guard !isUpdatingGateway, isGatewayConfigured else {
             placeResults = []
             isSearchingPlaces = false
-            if query.count >= 2 { placeSearchFailure = "请先在网关设置中填写服务地址" }
+            if query.count >= 2 { placeSearchFailure = "Configura la dirección del servidor en ajustes" }
             return
         }
         guard query.count >= 2 else {
@@ -561,7 +561,7 @@ final class AppModel: ObservableObject {
                 self.placeResults = Self.deduplicated(places)
                 self.isSearchingPlaces = false
                 self.placeSearchFailure = self.placeResults.isEmpty
-                    ? "没有找到，试试输入更完整的地点名"
+                    ? "No se encontraron lugares. Intenta con un nombre más específico."
                     : nil
             } catch is CancellationError {
                 return
@@ -569,7 +569,7 @@ final class AppModel: ObservableObject {
                 guard let self, !Task.isCancelled else { return }
                 self.placeResults = []
                 self.isSearchingPlaces = false
-                self.placeSearchFailure = "地点搜索失败，请检查网络后重试"
+                self.placeSearchFailure = "Error en la búsqueda. Revisa tu conexión."
             }
         }
     }
@@ -628,11 +628,11 @@ final class AppModel: ObservableObject {
     private func formatDuration(_ seconds: Int) -> String {
         guard seconds > 0 else { return "--" }
         let minutes = max(1, Int(round(Double(seconds) / 60)))
-        return minutes >= 60 ? "\(minutes / 60)时\(minutes % 60)分" : "\(minutes)分钟"
+        return minutes >= 60 ? "\(minutes / 60) h \(minutes % 60) min" : "\(minutes) min"
     }
 }
 
 private enum GatewaySettingsError: LocalizedError {
     case navigationActive
-    var errorDescription: String? { "请先结束导航，再更换网关地址。" }
+    var errorDescription: String? { "Finaliza la navegación actual antes de cambiar de servidor." }
 }

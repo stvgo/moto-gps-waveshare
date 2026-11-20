@@ -74,11 +74,11 @@ struct ContentView: View {
             if !model.isGatewayConfigured {
                 Section {
                     Button { showsGatewaySettings = true } label: {
-                        Label("设置导航网关", systemImage: "network")
+                        Label("Configurar Servidor", systemImage: "network")
                     }
                     .accessibilityIdentifier("gateway-setup-button")
                 } footer: {
-                    Text("填写你部署的网关地址后，就可以搜索地点和规划路线。")
+                    Text("Configura la dirección de tu servidor para buscar lugares y calcular rutas.")
                 }
             }
             Section { searchField }
@@ -89,12 +89,12 @@ struct ContentView: View {
                     Section {
                         ContentUnavailableView {
                             Label {
-                                Text("选择目的地")
+                                Text("Seleccionar Destino")
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
                             } icon: { Image(systemName: "map") }
                         } description: {
-                            Text("搜索地点或地址，选好路线就出发。")
+                            Text("Busca un lugar o dirección y sal a rodar.")
                         }
                         .padding(.vertical, 12)
                     }
@@ -107,16 +107,16 @@ struct ContentView: View {
                     mapDownloadsButton
                     demoButton
                 } footer: {
-                    Text("连接圆屏后，导航指引会自动同步。")
+                    Text("Al conectar la pantalla, las indicaciones se sincronizan automáticamente.")
                 }
                 Section {
                     Button { showsGatewaySettings = true } label: {
-                        Label("网关设置", systemImage: "network")
+                        Label("Ajustes de Servidor", systemImage: "network")
                             .foregroundStyle(Color.primary)
                     }
                     .accessibilityIdentifier("gateway-settings-button")
                     Button { showsDataUse = true } label: {
-                        Label("隐私与数据", systemImage: "hand.raised")
+                        Label("Privacidad y Datos", systemImage: "hand.raised")
                             .foregroundStyle(Color.primary)
                     }
                     .accessibilityIdentifier("privacy-data-button")
@@ -125,17 +125,17 @@ struct ContentView: View {
         }
         .listStyle(.insetGrouped)
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle("出发")
+        .navigationTitle("MOTO GPS")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button { showsGatewaySettings = true } label: { Image(systemName: "gearshape") }
-                    .accessibilityLabel("网关设置")
+                    .accessibilityLabel("Ajustes de Servidor")
                     .accessibilityIdentifier("gateway-settings-toolbar")
             }
             ToolbarItem(placement: .topBarTrailing) { deviceToolbarButton }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("完成") { searchFocused = false }
+                Button("Listo") { searchFocused = false }
             }
         }
     }
@@ -145,10 +145,10 @@ struct ContentView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.secondary)
                 .accessibilityHidden(true)
-            TextField("搜索地点或地址", text: $model.destinationQuery)
+            TextField("Buscar lugar o dirección", text: $model.destinationQuery)
                 .font(.body)
                 .accessibilityIdentifier("destination-search-field")
-                .accessibilityLabel("搜索目的地")
+                .accessibilityLabel("Buscar destino")
                 .focused($searchFocused)
                 .submitLabel(.search)
                 .textInputAutocapitalization(.never)
@@ -167,7 +167,7 @@ struct ContentView: View {
                         .frame(minWidth: 28, minHeight: 44)
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel("清空搜索")
+                .accessibilityLabel("Borrar búsqueda")
             }
         }
         .frame(minHeight: 44)
@@ -178,7 +178,7 @@ struct ContentView: View {
             if model.isSearchingPlaces {
                 HStack(spacing: 12) {
                     ProgressView()
-                    Text("正在搜索…").foregroundStyle(Color.secondary)
+                    Text("Buscando…").foregroundStyle(Color.secondary)
                 }
                 .frame(minHeight: 56)
                 .accessibilityElement(children: .combine)
@@ -192,25 +192,25 @@ struct ContentView: View {
             } else {
                 ContentUnavailableView {
                     Label {
-                        Text(model.placeSearchFailure == nil ? "输入地点名称" : "暂无结果")
+                        Text(model.placeSearchFailure == nil ? "Escribe un lugar" : "Sin resultados")
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     } icon: { Image(systemName: "magnifyingglass") }
                 } description: {
-                    Text(model.placeSearchFailure ?? "至少输入两个字，例如“奥体中心”。")
+                    Text(model.placeSearchFailure ?? "Ingresa el nombre de un lugar o dirección.")
                 } actions: {
                     if model.placeSearchFailure != nil {
-                        Button("重新搜索", action: model.submitDestinationSearch)
+                        Button("Reintentar búsqueda", action: model.submitDestinationSearch)
                     }
                 }
             }
         } header: {
-            Text("搜索结果")
+            Text("Resultados")
         } footer: {
             VStack(alignment: .leading, spacing: 8) {
                 Text(model.searchScopeText)
                 if model.searchLocationStatus == .permissionDenied {
-                    Button("前往设置开启定位", action: openSystemSettings)
+                    Button("Ir a Ajustes para activar ubicación", action: openSystemSettings)
                 }
             }
         }
@@ -224,11 +224,11 @@ struct ContentView: View {
             }
         } header: {
             HStack {
-                Text("最近搜索")
+                Text("Búsquedas recientes")
                 Spacer()
-                Button("清空", action: model.clearRecentPlaces)
+                Button("Borrar", action: model.clearRecentPlaces)
                     .textCase(nil)
-                    .accessibilityLabel("清空最近搜索")
+                    .accessibilityLabel("Borrar búsquedas recientes")
             }
         }
     }
@@ -273,8 +273,8 @@ struct ContentView: View {
         } label: {
             Label {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("演示导航").foregroundStyle(Color.primary)
-                    Text("先体验一次导航流程")
+                    Text("Modo Simulación / Demo").foregroundStyle(Color.primary)
+                    Text("Probar animación de ruta y pantalla")
                         .font(.subheadline)
                         .foregroundStyle(Color.secondary)
                 }
@@ -292,8 +292,8 @@ struct ContentView: View {
         Button { showsMapDownloads = true } label: {
             Label {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("地图与离线下载").foregroundStyle(Color.primary)
-                    Text("自动加载周边，也能提前保存城市和沿途地图")
+                    Text("Mapas y Descarga Offline").foregroundStyle(Color.primary)
+                    Text("Descargar mapas de la ciudad o a lo largo de tu ruta")
                         .font(.subheadline).foregroundStyle(Color.secondary)
                 }
             } icon: { Image(systemName: "map").foregroundStyle(.blue) }
@@ -319,7 +319,7 @@ struct ContentView: View {
                     }
                     .padding(.vertical, 5)
                 } header: {
-                    Label("从我的位置出发", systemImage: "location.fill").textCase(nil)
+                    Label("Desde mi ubicación", systemImage: "location.fill").textCase(nil)
                 }
 
                 if model.isPlanningRoutePreview {
@@ -327,8 +327,8 @@ struct ContentView: View {
                         HStack(spacing: 14) {
                             ProgressView()
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("正在规划路线")
-                                Text("获取当前位置与路况…")
+                                Text("Calculando ruta")
+                                Text("Obteniendo ubicación y tráfico…")
                                     .font(.subheadline)
                                     .foregroundStyle(Color.secondary)
                             }
@@ -347,21 +347,21 @@ struct ContentView: View {
                         .frame(height: dynamicTypeSize.isAccessibilitySize ? 220 : 270)
                         .listRowInsets(EdgeInsets())
                         .accessibilityIdentifier("route-preview-map")
-                        .accessibilityLabel("前往\(place.name)的路线全览")
+                        .accessibilityLabel("Ruta hacia \(place.name)")
                     }
                     Section {
                         ForEach(model.routePreviewCandidates) { candidate in routeOptionRow(candidate) }
                     } header: {
-                        Text("选择路线")
+                        Text("Seleccionar Ruta")
                     } footer: {
-                        Text("高德驾车路线 · 预计时间会随路况变化")
+                        Text("Ruta calculada con tráfico en tiempo real")
                     }
                     Section { mapDownloadsButton }
                 } else if let failure = model.routePreviewFailure {
                     Section {
                         ContentUnavailableView {
                             Label {
-                                Text("无法规划路线")
+                                Text("No se pudo calcular la ruta")
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
                             } icon: { Image(systemName: "exclamationmark.triangle") }
@@ -369,7 +369,7 @@ struct ContentView: View {
                             Text(failure)
                         } actions: {
                             if model.searchLocationStatus == .permissionDenied {
-                                Button("前往设置", action: openSystemSettings)
+                                Button("Ir a Ajustes", action: openSystemSettings)
                             }
                         }
                     }
@@ -380,15 +380,15 @@ struct ContentView: View {
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("路线")
+        .navigationTitle("Ruta")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("更换") {
+                Button("Cambiar") {
                     model.clearDestination()
                     searchFocused = true
                 }
-                .accessibilityLabel("更换目的地")
+                .accessibilityLabel("Cambiar destino")
                 .accessibilityIdentifier("destination-change-button")
             }
         }
@@ -478,7 +478,7 @@ struct ContentView: View {
             Section {
                 Label {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(model.isDemoActive ? "演示目的地" : "目的地")
+                        Text(model.isDemoActive ? "Destino de Demo" : "Destino")
                             .font(.subheadline)
                             .foregroundStyle(Color.secondary)
                         Text(model.activeDestinationName).font(.headline)
@@ -488,35 +488,35 @@ struct ContentView: View {
                 }
                 .padding(.vertical, 6)
                 if dynamicTypeSize.isAccessibilitySize {
-                    rideMetric("剩余时间", value: remainingDuration)
-                    rideMetric("剩余路程", value: remainingDistance)
+                    rideMetric("Tiempo rest.", value: remainingDuration)
+                    rideMetric("Distancia", value: remainingDistance)
                 } else {
                     HStack(spacing: 24) {
-                        rideMetric("剩余时间", value: remainingDuration)
-                        rideMetric("剩余路程", value: remainingDistance)
+                        rideMetric("Tiempo rest.", value: remainingDuration)
+                        rideMetric("Distancia", value: remainingDistance)
                     }
                 }
             }
-            Section("导航状态") {
+            Section("Estado de Navegación") {
                 deviceSummaryButton
-                statusRow("手机定位", symbol: "location", value: locationStatus,
+                statusRow("GPS del Celular", symbol: "location", value: locationStatus,
                           color: model.navigation.hasUsableFix ? .green : .secondary)
-                statusRow("路况", symbol: "car.side", value: trafficStatus, color: .secondary)
+                statusRow("Tráfico", symbol: "car.side", value: trafficStatus, color: .secondary)
                 SurroundingMapStatusRow(store: model.surroundingMap)
-                Button("管理离线地图") { showsMapDownloads = true }
+                Button("Mapas offline") { showsMapDownloads = true }
             }
             if model.isDemoActive {
                 Section {
-                    Label("演示中的位置与行驶过程为模拟数据。", systemImage: "info.circle")
+                    Label("La simulación utiliza datos de prueba.", systemImage: "info.circle")
                         .font(.footnote)
                         .foregroundStyle(Color.secondary)
                 } footer: {
-                    Text("道路数据 © OpenStreetMap contributors")
+                    Text("Datos de vías © OpenStreetMap contributors")
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle(model.isDemoActive ? "演示导航" : "导航中")
+        .navigationTitle(model.isDemoActive ? "Modo Demo" : "Navegando")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) { deviceToolbarButton }
@@ -573,7 +573,7 @@ struct ContentView: View {
             searchFocused = false
             showsDeviceDetails = true
         } label: { Image(systemName: "circle.circle") }
-        .accessibilityLabel("我的圆屏")
+        .accessibilityLabel("Pantalla Moto")
         .accessibilityValue(deviceStatus)
         .accessibilityIdentifier("device-details-button")
     }
@@ -590,7 +590,7 @@ struct ContentView: View {
                     .frame(width: 24)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("我的圆屏").foregroundStyle(Color.primary)
+                    Text("Pantalla Moto").foregroundStyle(Color.primary)
                     Text(deviceStatus).font(.subheadline).foregroundStyle(Color.secondary)
                 }
                 Spacer(minLength: 4)
@@ -630,28 +630,28 @@ struct ContentView: View {
                 }
                 .listRowBackground(Color.clear)
                 Section {
-                    statusRow("连接状态", symbol: "antenna.radiowaves.left.and.right", value: deviceStatus,
+                    statusRow("Estado de Conexión", symbol: "antenna.radiowaves.left.and.right", value: deviceStatus,
                               color: model.deviceReady ? .green : .secondary)
                     Button(connectionActionTitle, action: model.toggleDeviceConnection)
                         .accessibilityIdentifier("device-connection-action")
                     if case .bluetoothUnavailable = model.device.connection {
-                        Button("打开系统设置", action: openSystemSettings)
+                        Button("Abrir Ajustes", action: openSystemSettings)
                     }
                 } footer: {
-                    Text("圆屏保持开机并靠近 iPhone。连接成功后，当前导航会自动同步。")
+                    Text("Mantén la pantalla encendida y cerca del iPhone. Al conectar, se sincronizará automáticamente.")
                 }
-                Section("定位") {
-                    statusRow("搜索位置", symbol: "location", value: searchLocationStatus, color: .secondary)
+                Section("GPS y Ubicación") {
+                    statusRow("Ubicación", symbol: "location", value: searchLocationStatus, color: .secondary)
                     if model.searchLocationStatus == .permissionDenied {
-                        Button("前往设置开启定位", action: openSystemSettings)
+                        Button("Ir a Ajustes para activar ubicación", action: openSystemSettings)
                     }
                 }
             }
-            .navigationTitle("我的圆屏")
+            .navigationTitle("Pantalla Moto")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { showsDeviceDetails = false }
+                    Button("Listo") { showsDeviceDetails = false }
                         .accessibilityIdentifier("device-details-done")
                 }
             }
@@ -695,19 +695,19 @@ struct ContentView: View {
             let distanceText = distance >= 1_000
                 ? String(format: "%.1f km", distance / 1_000)
                 : "\(Int(distance.rounded())) m"
-            parts.append("距你 \(distanceText)")
+            parts.append("A \(distanceText)")
         }
-        return parts.isEmpty ? "查看路线" : parts.joined(separator: " · ")
+        return parts.isEmpty ? "Ver ruta" : parts.joined(separator: " · ")
     }
 
     private var deviceStatus: String {
         switch model.device.connection {
-        case .connected: return model.deviceReady ? "已连接" : "正在准备"
-        case .scanning: return "正在寻找圆屏"
-        case .connecting: return "正在连接"
-        case .failed: return "连接未成功"
-        case .bluetoothUnavailable: return "蓝牙不可用"
-        case .idle: return "未连接"
+        case .connected: return model.deviceReady ? "Conectado" : "Preparando"
+        case .scanning: return "Buscando pantalla"
+        case .connecting: return "Conectando"
+        case .failed: return "Error de conexión"
+        case .bluetoothUnavailable: return "Bluetooth no disponible"
+        case .idle: return "Desconectado"
         }
     }
 
@@ -721,56 +721,56 @@ struct ContentView: View {
     private var deviceDetail: String {
         switch model.device.connection {
         case .connected:
-            return model.deviceReady ? "圆屏已就绪，可以接收导航指引。" : "正在准备导航同步，请稍候。"
+            return model.deviceReady ? "Pantalla lista para recibir indicaciones." : "Sincronizando navegación, un momento."
         case .failed:
-            return "暂时无法连接。请确认圆屏已开机并靠近手机，再试一次。"
+            return "No se pudo conectar. Asegúrate de que la pantalla esté encendida y cerca."
         case .bluetoothUnavailable:
-            return "请开启手机蓝牙，并允许 MOTO GPS 使用蓝牙。"
+            return "Activa el Bluetooth y concede permisos a MOTO GPS."
         case .scanning, .connecting:
-            return "请将已开机的圆屏放在手机附近。"
+            return "Mantén la pantalla encendida cerca del iPhone."
         case .idle:
-            return "连接你的圆屏，在车把上查看导航。"
+            return "Conecta la pantalla para ver el GPS en el manillar."
         }
     }
 
     private var connectionActionTitle: String {
         switch model.device.connection {
-        case .connected: return "断开连接"
-        case .scanning: return "停止搜索"
-        case .connecting: return "取消连接"
-        case .failed: return "重新连接"
-        case .idle, .bluetoothUnavailable: return "连接圆屏"
+        case .connected: return "Desconectar"
+        case .scanning: return "Detener búsqueda"
+        case .connecting: return "Cancelar"
+        case .failed: return "Reintentar conexión"
+        case .idle, .bluetoothUnavailable: return "Conectar Pantalla"
         }
     }
 
     private var searchLocationStatus: String {
         switch model.searchLocationStatus {
-        case .available: return "已获取"
-        case .preparing: return "获取中"
-        case .permissionDenied: return "未获授权"
-        case .unavailable: return "暂不可用"
+        case .available: return "Disponible"
+        case .preparing: return "Obteniendo"
+        case .permissionDenied: return "Sin permiso"
+        case .unavailable: return "No disponible"
         }
     }
 
     private var navigationTitle: String {
-        if model.navigationFailure != nil { return "导航需要处理" }
+        if model.navigationFailure != nil { return "Atención a la navegación" }
         switch model.navigation.stateName {
-        case "acquiring": return "正在获取位置"
-        case "planning": return "正在规划路线"
-        case "rerouting": return "正在重新规划"
-        case "arrived": return "已到达目的地"
-        case "navigating": return model.isDemoActive ? "正在演示" : "正在导航"
-        default: return "准备出发"
+        case "acquiring": return "Obteniendo ubicación"
+        case "planning": return "Calculando ruta"
+        case "rerouting": return "Recalculando ruta"
+        case "arrived": return "¡Has llegado!"
+        case "navigating": return model.isDemoActive ? "Simulación" : "Navegando"
+        default: return "Listo para rodar"
         }
     }
 
     private var navigationDetail: String {
         if let failure = model.navigationFailure { return failure }
         if model.navigation.stateName == "navigating" {
-            if model.isDemoActive { return "预览行驶过程与圆屏上的导航指引。" }
+            if model.isDemoActive { return "Simulación de ruta y pantalla activa." }
             return model.deviceReady
-                ? "圆屏已连接，手机可锁屏收好。"
-                : "圆屏连接后，导航指引会自动同步。"
+                ? "Pantalla conectada. Puedes bloquear el iPhone."
+                : "Al conectar la pantalla, las indicaciones se sincronizarán."
         }
         return model.phaseDetail
     }
@@ -798,21 +798,21 @@ struct ContentView: View {
     }
 
     private var locationStatus: String {
-        if model.isDemoActive { return "演示位置" }
-        return model.navigation.hasUsableFix ? "已获取" : "获取中"
+        if model.isDemoActive { return "Simulación" }
+        return model.navigation.hasUsableFix ? "Disponible" : "Obteniendo"
     }
 
     private var trafficStatus: String {
-        if model.isDemoActive { return "演示中" }
-        if model.navigation.trafficRequestInFlight { return "更新中" }
-        return model.navigation.networkName == "online" ? "在线" : "离线"
+        if model.isDemoActive { return "Simulación" }
+        if model.navigation.trafficRequestInFlight { return "Actualizando" }
+        return model.navigation.networkName == "online" ? "En línea" : "Offline"
     }
 
     private func trafficTint(_ candidate: RoutePreviewCandidate) -> Color {
         switch candidate.trafficSummary {
-        case "拥堵较多": return .red
-        case "部分路段缓行": return .orange
-        case "路况顺畅": return .green
+        case "Tráfico pesado", "Congestión", "heavy": return .red
+        case "Tráfico lento", "moderate": return .orange
+        case "Tráfico fluido", "Despejado", "clear": return .green
         default: return .secondary
         }
     }

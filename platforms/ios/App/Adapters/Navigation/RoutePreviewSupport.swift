@@ -9,9 +9,9 @@ struct RoutePreviewCandidate: Identifiable, Equatable {
 
     var title: String {
         switch ordinal {
-        case 0: "推荐路线"
-        case 1: "备选路线一"
-        default: "备选路线二"
+        case 0: "Ruta recomendada"
+        case 1: "Ruta alternativa 1"
+        default: "Ruta alternativa 2"
         }
     }
 
@@ -24,13 +24,13 @@ struct RoutePreviewCandidate: Identifiable, Equatable {
     var durationText: String {
         let minutes = max(1, Int(round(Double(route.totalDurationS) / 60)))
         return minutes >= 60
-            ? "\(minutes / 60) 小时 \(minutes % 60) 分"
-            : "\(minutes) 分钟"
+            ? "\(minutes / 60) h \(minutes % 60) min"
+            : "\(minutes) min"
     }
 
     var trafficSummary: String {
         guard !route.traffic.isEmpty, route.totalDistanceM > 0 else {
-            return "暂无分段路况"
+            return "Sin datos de tráfico"
         }
         let weighted = route.traffic.reduce(into: (slow: 0.0, congested: 0.0)) { result, segment in
             let length = max(0, segment.endOffsetM - segment.startOffsetM)
@@ -45,9 +45,9 @@ struct RoutePreviewCandidate: Identifiable, Equatable {
         }
         let congestedShare = weighted.congested / route.totalDistanceM
         let affectedShare = (weighted.slow + weighted.congested) / route.totalDistanceM
-        if congestedShare >= 0.12 { return "拥堵较多" }
-        if affectedShare >= 0.18 { return "部分路段缓行" }
-        return "路况顺畅"
+        if congestedShare >= 0.12 { return "Tráfico pesado" }
+        if affectedShare >= 0.18 { return "Tráfico moderado" }
+        return "Tráfico fluido"
     }
 }
 

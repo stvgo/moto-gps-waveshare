@@ -16,7 +16,7 @@ enum JinanDemoFixture {
     static let reroutedRouteID = "demo-jinan-big-data-d-to-inspur-v2-rerouted"
     static let destinationPOIID = "B02130VXRE"
     static let fallbackDurationS = 187
-    static let roadAttribution = "道路 © OpenStreetMap contributors"
+    static let roadAttribution = "Carreteras © Colaboradores de OpenStreetMap"
 
     static let requestedOriginWGS84 = WGS84Point(
         longitudeDeg: 117.1224488,
@@ -104,10 +104,10 @@ enum JinanDemoFixture {
     ]
 
     static let maneuvers: [JinanDemoManeuverFixture] = [
-        JinanDemoManeuverFixture(id: 1, type: .continue, routePointIndex: 0, roadName: "园区道路", instruction: "沿园区道路驶向新泺大街"),
-        JinanDemoManeuverFixture(id: 2, type: .right, routePointIndex: 1, roadName: "新泺大街", instruction: "右转进入新泺大街"),
-        JinanDemoManeuverFixture(id: 3, type: .left, routePointIndex: 4, roadName: "崇华路", instruction: "左转进入崇华路"),
-        JinanDemoManeuverFixture(id: 4, type: .right, routePointIndex: 12, roadName: "浪潮路", instruction: "右转进入浪潮路"),
-        JinanDemoManeuverFixture(id: 5, type: .arrive, routePointIndex: 34, roadName: "浪潮集团(总部)", instruction: "到达浪潮集团(总部)附近"),
+        JinanDemoManeuverFixture(id: 1, type: .continue, routePointIndex: 0, roadName: "Av. Principal", instruction: "Continúa por Av. Principal hacia Calle 100"),
+        JinanDemoManeuverFixture(id: 2, type: .right, routePointIndex: 1, roadName: "Calle 100", instruction: "Gira a la derecha en Calle 100"),
+        JinanDemoManeuverFixture(id: 3, type: .left, routePointIndex: 4, roadName: "Carrera 15", instruction: "Gira a la izquierda en Carrera 15"),
+        JinanDemoManeuverFixture(id: 4, type: .right, routePointIndex: 12, roadName: "Av. El Dorado", instruction: "Gira a la derecha en Av. El Dorado"),
+        JinanDemoManeuverFixture(id: 5, type: .arrive, routePointIndex: 34, roadName: "Destino Final", instruction: "Llegada al destino final"),
     ]
 }

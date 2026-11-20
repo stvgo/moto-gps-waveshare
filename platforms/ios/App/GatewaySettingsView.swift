@@ -13,23 +13,23 @@ struct GatewaySettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("https://你的网关地址/", text: $address, axis: .vertical)
+                    TextField("https://tu-servidor.railway.app/", text: $address, axis: .vertical)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .accessibilityIdentifier("gateway-address-field")
                         .disabled(model.isUpdatingGateway)
                 } header: {
-                    Text("网关地址")
+                    Text("Dirección del Servidor")
                 } footer: {
-                    Text("填写完整的 HTTPS 根地址。例如 https://nav.example.com/moto-gps/api/，不要填高德 Key。")
+                    Text("URL raíz HTTPS del backend (ej. https://moto-gps-waveshare-production.up.railway.app/).")
                 }
                 Section {
                     Button {
                         checkConnection()
                     } label: {
                         HStack {
-                            Text("测试连接")
+                            Text("Probar Conexión")
                             if isChecking { Spacer(); ProgressView() }
                         }
                     }
@@ -40,24 +40,24 @@ struct GatewaySettingsView: View {
                             .accessibilityIdentifier("gateway-status-message")
                     }
                 } footer: {
-                    Text("连接测试只检查网关状态；真实搜索、导航和地图还需要相应服务可用。")
+                    Text("Verifica el estado del servicio y la conexión a Internet.")
                 }
                 Section {
-                    Text("保存后立即生效，无需重新安装。更换地址会清空当前搜索并暂停地图下载，已下载的地图仍会保留。")
-                    Text("地点、路线和定位请求将发送到这个地址，请使用你信任的网关。")
+                    Text("Los cambios surten efecto de inmediato sin reinstalar la app.")
+                    Text("Las búsquedas y rutas se calculan a través de este servidor.")
                 }
                 if model.isNavigationActive {
-                    Section { Text("请先结束导航，再更换网关地址。") }
+                    Section { Text("Finaliza la navegación actual antes de cambiar de servidor.") }
                 }
             }
-            .navigationTitle("网关设置")
+            .navigationTitle("Ajustes de Servidor")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }.disabled(model.isUpdatingGateway)
+                    Button("Cancelar") { dismiss() }.disabled(model.isUpdatingGateway)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
+                    Button("Guardar") {
                         checkTask?.cancel()
                         isChecking = false
                         Task {
@@ -112,11 +112,11 @@ struct GatewaySettingsView: View {
                 guard health.status == "ok" else { throw URLError(.badServerResponse) }
                 try Task.checkCancellation()
                 message = health.ready_for_live_navigation
-                    ? "网关已连接，已启用实时导航配置。"
-                    : "网关已连接，但尚未启用实时导航。请检查服务端配置。"
+                    ? "Servidor conectado y listo para navegación en vivo."
+                    : "Servidor conectado, pero la navegación en vivo no está habilitada."
             } catch {
                 guard !Task.isCancelled else { return }
-                message = "连接失败，请检查地址、HTTPS 证书和网关是否已启动。"
+                message = "Error de conexión. Verifica la URL y tu conexión a Internet."
             }
         }
     }

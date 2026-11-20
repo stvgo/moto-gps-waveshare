@@ -35,13 +35,13 @@ enum SurroundingMapError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidTile: return "地图区域无效"
-        case .invalidResponse: return "地图数据格式无效"
-        case .responseTooLarge: return "地图分块超过大小限制"
-        case .storageLimit: return "离线地图已达到 512 MB 上限，请删除不用的区域"
-        case .tooManyTiles: return "下载区域过大，请缩小城市区域或路线范围"
-        case .missingPack: return "未找到这份离线地图"
-        case .httpStatus(let status): return status == 429 ? "地图服务繁忙，请稍后继续" : "地图服务暂时不可用"
+        case .invalidTile: return "Zona de mapa no válida"
+        case .invalidResponse: return "Formato de datos de mapa no válido"
+        case .responseTooLarge: return "El bloque de mapa excede el tamaño máximo"
+        case .storageLimit: return "Límite de 512 MB de mapas alcanzado. Elimina zonas no utilizadas."
+        case .tooManyTiles: return "Área de descarga demasiado grande. Reduce la zona o la ruta."
+        case .missingPack: return "No se encontró este mapa offline"
+        case .httpStatus(let status): return status == 429 ? "Servidor ocupado, reintenta más tarde" : "Servicio de mapas no disponible"
         }
     }
 }
@@ -161,7 +161,7 @@ actor MapTileCache {
                 try FileManager.default.moveItem(at: manifestURL,
                     to: root.appendingPathComponent("packs.corrupt-\(UUID().uuidString).json"))
                 savedPacks = []
-                recoveryNotice = "离线地图清单损坏，已保留原文件。请重新添加需要的下载区域。"
+                recoveryNotice = "Archivo de mapas dañado. Vuelve a añadir la zona de descarga."
             }
         }
         for url in try FileManager.default.contentsOfDirectory(
@@ -331,7 +331,7 @@ actor MapTileCache {
             }
             return MapDownloadPack(id: pack.id, name: pack.name,
                                    detail: count == pack.tiles.count ? pack.detail :
-                                    "\(pack.detail) · 已下载 \(Int(Double(count) / Double(pack.tiles.count) * 100))%",
+                                    "\(pack.detail) · Descargado \(Int(Double(count) / Double(pack.tiles.count) * 100))%",
                                    byteCount: bytes, tileCount: pack.tiles.count,
                                    isComplete: count == pack.tiles.count)
         }
@@ -379,7 +379,7 @@ actor MapTileCache {
 
 @MainActor
 final class SurroundingMapStore: ObservableObject {
-    @Published private(set) var statusText = "在线地图优先，离线地图备用"
+    @Published private(set) var statusText = "Mapa online activo"
     @Published private(set) var isDownloading = false
     @Published private(set) var downloadProgress = 0.0
     @Published private(set) var downloadMessage: String?
@@ -431,7 +431,7 @@ final class SurroundingMapStore: ObservableObject {
                 throw SurroundingMapError.invalidTile
             }
         } catch {
-            statusText = "此位置暂时没有周边地图"
+            statusText = "Sin mapa disponible para esta ubicación"
             return
         }
         lastOrigin = origin
@@ -452,7 +452,7 @@ final class SurroundingMapStore: ObservableObject {
             self.emit(documents: Array(documents.values), origin: origin,
                       includeFallback: documents.count != tiles.count)
             self.statusText = documents.count == tiles.count
-                ? "正在更新 · 已缓存周边地图" : "正在加载在线周边地图"
+                ? "Actualizando · Mapa en caché" : "Cargando mapa en línea"
             var failed = false
             // A small viewport normally touches 4–9 tiles. Bounded concurrency
             // keeps navigation and user-initiated downloads responsive.
@@ -477,12 +477,12 @@ final class SurroundingMapStore: ObservableObject {
             let complete = documents.count == tiles.count
             let hasOfflineGeometry = self.emit(documents: Array(documents.values), origin: origin, includeFallback: !complete)
             if !failed && complete {
-                self.statusText = needsRefresh.isEmpty ? "周边地图已就绪 · 使用缓存" : "在线周边地图"
+                self.statusText = needsRefresh.isEmpty ? "Mapa listo · Usando caché" : "Mapa en línea"
                 self.retryAfter = Date().addingTimeInterval(24 * 60 * 60)
             } else {
                 self.retryAfter = Date().addingTimeInterval(30)
-                self.statusText = complete ? "离线地图 · 当前区域已缓存" :
-                    (hasOfflineGeometry ? "离线地图 · 当前区域仅部分覆盖" : "在线地图不可用 · 此处无离线地图")
+                self.statusText = complete ? "Mapa sin conexión · Área en caché" :
+                    (hasOfflineGeometry ? "Mapa sin conexión · Cobertura parcial" : "Mapa en línea no disponible · Sin mapa sin conexión")
             }
             await self.reloadPacks()
         }
@@ -500,7 +500,7 @@ final class SurroundingMapStore: ObservableObject {
         sceneTask = nil
         lastOrigin = nil
         retryAfter = nil
-        statusText = "在线地图优先，离线地图备用"
+        statusText = "Mapa en línea prioritario, sin conexión de respaldo"
     }
 
     func download(name: String, detail: String, tiles: [MapTileID]) {
@@ -519,7 +519,7 @@ final class SurroundingMapStore: ObservableObject {
         let current = downloadGeneration
         isDownloading = true
         downloadProgress = 0
-        downloadMessage = "正在准备下载…"
+        downloadMessage = "Preparando descarga…"
         downloadTask = Task { [weak self] in
             guard let self else { return }
             do {
@@ -537,14 +537,14 @@ final class SurroundingMapStore: ObservableObject {
                     self.downloadProgress = Double(index + 1) / Double(tiles.count)
                     verifiedBytes += await self.cache.byteCount(of: tile)
                     let size = ByteCountFormatter.string(fromByteCount: verifiedBytes, countStyle: .file)
-                    self.downloadMessage = "已下载 \(size) · \(Int(self.downloadProgress * 100))%"
+                    self.downloadMessage = "Descargado \(size) · \(Int(self.downloadProgress * 100))%"
                 }
-                self.downloadMessage = "下载完成，可离线使用"
+                self.downloadMessage = "Descarga completa, disponible sin conexión"
             } catch is CancellationError {
-                if self.downloadGeneration == current { self.downloadMessage = "下载已暂停，可继续下载" }
+                if self.downloadGeneration == current { self.downloadMessage = "Descarga en pausa, puedes continuar" }
             } catch {
                 if self.downloadGeneration == current {
-                    self.downloadMessage = "下载已暂停：\(error.localizedDescription)；已完成部分已保留"
+                    self.downloadMessage = "Descarga pausada: \(error.localizedDescription); avance guardado"
                 }
             }
             guard self.downloadGeneration == current else { return }
@@ -560,7 +560,7 @@ final class SurroundingMapStore: ObservableObject {
         downloadGeneration &+= 1
         isDownloading = false
         activeDownloadID = nil
-        if downloadMessage != nil { downloadMessage = "下载已暂停，可继续下载" }
+        if downloadMessage != nil { downloadMessage = "Descarga en pausa, puedes continuar" }
         Task { [weak self] in await self?.reloadPacks() }
     }
 
@@ -580,7 +580,7 @@ final class SurroundingMapStore: ObservableObject {
             guard let self else { return }
             do {
                 try await self.cache.clearTemporaryCache()
-                self.downloadMessage = "临时缓存已清除，已下载地图保留"
+                self.downloadMessage = "Caché temporal eliminada, mapas descargados conservados"
             } catch { self.downloadMessage = error.localizedDescription }
         }
     }
@@ -590,7 +590,7 @@ final class SurroundingMapStore: ObservableObject {
             packs = try await cache.packs()
             if let notice = await cache.takeRecoveryNotice() { downloadMessage = notice }
         }
-        catch { downloadMessage = "无法读取离线地图：\(error.localizedDescription)" }
+        catch { downloadMessage = "No se pudo leer el mapa sin conexión: \(error.localizedDescription)" }
     }
 
     private struct RoadKey: Hashable {

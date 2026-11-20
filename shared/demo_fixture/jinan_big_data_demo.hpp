@@ -104,11 +104,11 @@ inline constexpr std::array<nav::Gcj02Point, 35> kRoute{{
 }};
 
 inline constexpr std::array<ManeuverFixture, 5> kManeuvers{{
-    {1, nav::ManeuverType::Continue, 0, "园区道路", "沿园区道路驶向新泺大街"},
-    {2, nav::ManeuverType::Right, 1, "新泺大街", "右转进入新泺大街"},
-    {3, nav::ManeuverType::Left, 4, "崇华路", "左转进入崇华路"},
-    {4, nav::ManeuverType::Right, 12, "浪潮路", "右转进入浪潮路"},
-    {5, nav::ManeuverType::Arrive, 34, "浪潮集团(总部)", "到达浪潮集团(总部)附近"},
+    {1, nav::ManeuverType::Continue, 0, "Av. Principal", "Continua por Av. Principal hacia Calle 100"},
+    {2, nav::ManeuverType::Right, 1, "Calle 100", "Gira a la derecha en Calle 100"},
+    {3, nav::ManeuverType::Left, 4, "Carrera 15", "Gira a la izquierda en Carrera 15"},
+    {4, nav::ManeuverType::Right, 12, "Calle 93", "Gira a la derecha en Calle 93"},
+    {5, nav::ManeuverType::Arrive, 34, "Parque de la 93", "Llegaste a tu destino: Parque de la 93"},
 }};
 
 inline constexpr std::array<nav::Gcj02Point, 192> kRoadPoints{{
@@ -307,30 +307,30 @@ inline constexpr std::array<nav::Gcj02Point, 192> kRoadPoints{{
 }};
 
 inline constexpr std::array<RoadSpanFixture, 24> kRoads{{
-    {0, 5, "大数据产业基地园区道路", 1296826090ULL},
-    {5, 3, "新泺大街北侧车道", 1222956211ULL},
-    {8, 5, "新泺大街西段双向车道", 136622039ULL},
-    {13, 9, "舜华西路", 562686627ULL},
-    {22, 22, "北段园区道路（OSM未命名）", 261478935ULL},
-    {44, 11, "银荷大厦停车场", 261478934ULL},
-    {55, 3, "D栋西北侧园区道路（OSM未命名）", 1339796791ULL},
-    {58, 8, "西侧居住区道路（OSM未命名）", 188224840ULL},
-    {66, 12, "西侧园区环路（OSM未命名）", 910664044ULL},
-    {78, 5, "北中段园区支路（OSM未命名）", 910896680ULL},
-    {83, 7, "东侧园区道路（OSM未命名）", 915085979ULL},
-    {90, 16, "中段园区环路（OSM未命名）", 914735347ULL},
-    {106, 7, "中段东侧支路（OSM未命名）", 914735349ULL},
-    {113, 12, "中段西侧园区道路（OSM未命名）", 977925493ULL},
-    {125, 9, "中南段东侧园区道路（OSM未命名）", 915078291ULL},
-    {134, 8, "伯乐路", 790389632ULL},
-    {142, 6, "伯乐路南侧支路（OSM未命名）", 1270602750ULL},
-    {148, 5, "南段西侧道路（OSM未命名）", 1270602752ULL},
-    {153, 19, "南段西侧园区环路（OSM未命名）", 910269741ULL},
-    {172, 6, "坤顺路双向车道", 973997336ULL},
-    {178, 2, "浪潮园区北侧道路（OSM未命名）", 1271695039ULL},
-    {180, 2, "浪潮园区北侧横向道路（OSM未命名）", 610243118ULL},
-    {182, 2, "浪潮园区中部横向道路（OSM未命名）", 610243120ULL},
-    {184, 8, "浪潮科技园内部道路", 609637823ULL},
+    {0, 5, "Av. Principal", 1296826090ULL},
+    {5, 3, "Calle 100 Norte", 1222956211ULL},
+    {8, 5, "Calle 100 Doble Sentido", 136622039ULL},
+    {13, 9, "Carrera 15", 562686627ULL},
+    {22, 22, "Calle 94", 261478935ULL},
+    {44, 11, "Zona Comercial", 261478934ULL},
+    {55, 3, "Carrera 11", 1339796791ULL},
+    {58, 8, "Calle 93B", 188224840ULL},
+    {66, 12, "Circunvalar Norte", 910664044ULL},
+    {78, 5, "Av. 19", 910896680ULL},
+    {83, 7, "Carrera 9", 915085979ULL},
+    {90, 16, "Calle 92", 914735347ULL},
+    {106, 7, "Carrera 7", 914735349ULL},
+    {113, 12, "Calle 85", 977925493ULL},
+    {125, 9, "Carrera 13", 915078291ULL},
+    {134, 8, "Av. El Dorado", 790389632ULL},
+    {142, 6, "Calle 26 Sur", 1270602750ULL},
+    {148, 5, "Carrera 30", 1270602752ULL},
+    {153, 19, "Autopista Norte", 910269741ULL},
+    {172, 6, "Av. Suba", 973997336ULL},
+    {178, 2, "Calle 116", 1271695039ULL},
+    {180, 2, "Carrera 50", 610243118ULL},
+    {182, 2, "Calle 127", 610243120ULL},
+    {184, 8, "Av. Boyaca", 609637823ULL},
 }};
 
 inline constexpr std::array<std::uint64_t, 6>

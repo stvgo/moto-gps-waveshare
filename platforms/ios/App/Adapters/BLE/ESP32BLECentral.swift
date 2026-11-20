@@ -398,7 +398,7 @@ final class ESP32BLECentral: NSObject {
             // A stale retrievePeripherals result can otherwise remain pending
             // indefinitely and prevent discovery of a replacement device.
             UserDefaults.standard.removeObject(forKey: Self.knownPeripheralKey)
-            self.recoverFromTransportError("连接设备超时，正在重新扫描")
+            self.recoverFromTransportError("Tiempo de espera buscando dispositivo, reintentando...")
         }
     }
 
@@ -448,7 +448,7 @@ final class ESP32BLECentral: NSObject {
                   self.shouldMaintainConnection,
                   self.codec == nil
             else { return }
-            self.recoverFromTransportError("恢复圆屏服务超时，正在重新连接")
+            self.recoverFromTransportError("Tiempo de espera conectando servicio, reintentando...")
         }
     }
 
@@ -473,7 +473,7 @@ final class ESP32BLECentral: NSObject {
               let tx = characteristics.first(where: { $0.uuid == Self.deviceToPhoneUUID }),
               tx.properties.contains(.notify)
         else {
-            recoverFromTransportError("设备 BLE 特征或权限与 v1 不匹配")
+            recoverFromTransportError("Características BLE del dispositivo no coinciden con v1")
             return
         }
 
@@ -530,7 +530,7 @@ final class ESP32BLECentral: NSObject {
 
     private func acceptDeviceReady(_ value: MotoBLEConnectionStatus) {
         guard var handshake, let codec else {
-            recoverFromTransportError("设备在握手开始前发送了状态")
+            recoverFromTransportError("El dispositivo envió estado antes del inicio del enlace")
             return
         }
 
@@ -614,7 +614,7 @@ final class ESP32BLECentral: NSObject {
                   self.handshake?.stage == expectedStage,
                   !self.protocolReady
             else { return }
-            self.recoverFromTransportError("BLE v1 握手超时，正在重新连接")
+            self.recoverFromTransportError("Tiempo de espera de enlace BLE v1 agotado, reconectando...")
         }
     }
 
@@ -1026,14 +1026,14 @@ final class ESP32BLECentral: NSObject {
                 if self.lastValidDeviceFrameAtMs > 0,
                    now > self.lastValidDeviceFrameAtMs + self.deviceHeartbeatTimeoutMs
                 {
-                    self.recoverFromTransportError("设备心跳超时，正在重连")
+                    self.recoverFromTransportError("Heartbeat del dispositivo agotado, reconectando...")
                     return
                 }
 
                 do {
                     self.mapSceneDelivery.expire(nowMs: now)
                     if self.mapSceneDelivery.timeoutCount >= 3 {
-                        self.recoverFromTransportError("周边地图传输未确认，正在重新连接")
+                        self.recoverFromTransportError("Transmisión de mapa no confirmada, reconectando...")
                         return
                     }
                     try self.send(
@@ -1257,7 +1257,7 @@ extension ESP32BLECentral: @preconcurrency CBCentralManagerDelegate {
         peripheral.delegate = nil
         self.peripheral = nil
         snapshot.connection = shouldMaintainConnection
-            ? .failed(message: error?.localizedDescription ?? "无法连接设备")
+            ? .failed(message: error?.localizedDescription ?? "No se pudo conectar al dispositivo")
             : .idle
         scheduleReconnect()
     }
@@ -1275,7 +1275,7 @@ extension ESP32BLECentral: @preconcurrency CBCentralManagerDelegate {
         peripheral.delegate = nil
         self.peripheral = nil
         snapshot.connection = shouldMaintainConnection
-            ? .failed(message: error?.localizedDescription ?? "设备连接已断开，等待重连")
+            ? .failed(message: error?.localizedDescription ?? "Dispositivo desconectado, esperando reconexión...")
             : .idle
         scheduleReconnect()
     }
@@ -1290,7 +1290,7 @@ extension ESP32BLECentral: @preconcurrency CBPeripheralDelegate {
             return
         }
         guard let service = peripheral.services?.first(where: { $0.uuid == Self.serviceUUID }) else {
-            recoverFromTransportError("设备缺少 MOTO GPS 导航服务")
+            recoverFromTransportError("El dispositivo no tiene el servicio MOTO GPS")
             return
         }
         trace("navigation service discovered")
@@ -1334,7 +1334,7 @@ extension ESP32BLECentral: @preconcurrency CBPeripheralDelegate {
             return
         }
         guard characteristic.isNotifying, phoneToDeviceCharacteristic != nil else {
-            recoverFromTransportError("设备通知订阅没有生效")
+            recoverFromTransportError("La suscripción a notificaciones del dispositivo no fue efectiva")
             return
         }
         finishProtocolSetup(for: peripheral)
@@ -1417,7 +1417,7 @@ extension ESP32BLECentral: @preconcurrency CBPeripheralDelegate {
                                                 status: ack.status) {
                     trace("map acknowledged sequence=\(ack.acknowledgedSequence) status=\(ack.status)")
                     if mapSceneDelivery.timeoutCount >= 3 {
-                        recoverFromTransportError("周边地图连续接收失败，正在重新连接")
+                        recoverFromTransportError("Error continuo de recepción de mapa, reconectando...")
                         return
                     }
                     flushPendingMapScene()

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "fixture_id": "osm-jinan-big-data-d-to-inspur-v2",
   "route_id": "demo-jinan-big-data-d-to-inspur-v2",
-  "display_name": "山东省大数据产业基地D栋 → 浪潮集团(总部)",
+  "display_name": "Ruta Demo: Av. Principal → Destino Final",
   "requested_origin_wgs84": [
     36.6748039,
     117.1224488
@@ -161,36 +161,36 @@
       "id": 1,
       "type": "continue",
       "route_point_index": 0,
-      "road_name": "园区道路",
-      "instruction": "沿园区道路驶向新泺大街"
+      "road_name": "Av. Principal",
+      "instruction": "Continúa por Av. Principal hacia Calle 100"
     },
     {
       "id": 2,
       "type": "right",
       "route_point_index": 1,
-      "road_name": "新泺大街",
-      "instruction": "右转进入新泺大街"
+      "road_name": "Calle 100",
+      "instruction": "Gira a la derecha en Calle 100"
     },
     {
       "id": 3,
       "type": "left",
       "route_point_index": 4,
-      "road_name": "崇华路",
-      "instruction": "左转进入崇华路"
+      "road_name": "Carrera 15",
+      "instruction": "Gira a la izquierda en Carrera 15"
     },
     {
       "id": 4,
       "type": "right",
       "route_point_index": 12,
-      "road_name": "浪潮路",
-      "instruction": "右转进入浪潮路"
+      "road_name": "Av. El Dorado",
+      "instruction": "Gira a la derecha en Av. El Dorado"
     },
     {
       "id": 5,
       "type": "arrive",
       "route_point_index": 34,
-      "road_name": "浪潮集团(总部)",
-      "instruction": "到达浪潮集团(总部)附近"
+      "road_name": "Destino Final",
+      "instruction": "Llegada al destino final"
     }
   ],
   "route_source_ways": [
