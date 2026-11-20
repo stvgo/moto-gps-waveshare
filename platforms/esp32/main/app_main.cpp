@@ -54,11 +54,20 @@ void buttons_task(void* context) {
   std::uint64_t boot_pressed_since_ms = 0;
   bool boot_released_once = false;
 
+  std::uint64_t last_device_info_update_ms = 0;
+
   ESP_LOGI(kTag, "Buttons task started! Monitoring PWR (GPIO3) and BOOT (GPIO0)");
 
   while (true) {
     const std::uint64_t now_ms =
         static_cast<std::uint64_t>(esp_timer_get_time()) / 1'000U;
+
+    if (now_ms - last_device_info_update_ms >= 2000) {
+      last_device_info_update_ms = now_ms;
+      if (bridge != nullptr) {
+        bridge->update_device_info();
+      }
+    }
 
     // --- PWR BUTTON (GPIO3, Active-HIGH) ---
     if (!board_port_power_button_pressed()) {
@@ -71,6 +80,9 @@ void buttons_task(void* context) {
         if (duration >= 50 && duration < kPowerHoldMs) {
           uint8_t lvl = board_port_cycle_brightness();
           ESP_LOGI(kTag, "PWR clicked: AMOLED brightness -> %u%%", lvl);
+          if (bridge != nullptr) {
+            bridge->update_device_info();
+          }
         }
       }
       pwr_pressed_since_ms = 0;
@@ -198,6 +210,7 @@ extern "C" void app_main(void) {
   presenter.apply_to_lvgl();
   moto_nav_ui_set_music_page_enabled(1);
   phone_bridge.install_ui_callbacks();
+  phone_bridge.update_device_info();
   board_port_unlock();
 
   if (!phone_bridge.start_renderer()) {

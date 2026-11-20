@@ -1013,6 +1013,55 @@ extern "C" uint8_t board_port_cycle_brightness(void) {
   return new_level;
 }
 
+extern "C" uint8_t board_port_get_brightness(void) {
+  return kBrightnessSteps[s_brightness_index];
+}
+
+extern "C" esp_err_t board_port_get_battery_status(board_battery_status_t *status) {
+  if (status == nullptr || pmic == nullptr) {
+    return ESP_ERR_INVALID_STATE;
+  }
+
+  static bool s_adc_configured = false;
+  if (!s_adc_configured) {
+    std::uint8_t reg30 = 0;
+    if (read_pmic_register(0x30, &reg30) == ESP_OK) {
+      write_pmic_register(0x30, static_cast<std::uint8_t>(reg30 | 0x07));
+    }
+    std::uint8_t reg68 = 0;
+    if (read_pmic_register(0x68, &reg68) == ESP_OK) {
+      write_pmic_register(0x68, static_cast<std::uint8_t>(reg68 | 0x01));
+    }
+    s_adc_configured = true;
+  }
+
+  std::uint8_t reg00 = 0;
+  std::uint8_t reg01 = 0;
+  std::uint8_t rega4 = 0;
+  std::uint8_t reg34 = 0;
+  std::uint8_t reg35 = 0;
+
+  ESP_RETURN_ON_ERROR(read_pmic_register(0x00, &reg00), kTag, "reg00 read failed");
+  ESP_RETURN_ON_ERROR(read_pmic_register(0x01, &reg01), kTag, "reg01 read failed");
+  ESP_RETURN_ON_ERROR(read_pmic_register(0xA4, &rega4), kTag, "regA4 read failed");
+  read_pmic_register(0x34, &reg34);
+  read_pmic_register(0x35, &reg35);
+
+  const bool vbus_good = (reg00 & 0x20) != 0;
+  const bool bat_present = (reg00 & 0x08) != 0;
+  const uint8_t chg_direction = (reg01 >> 5) & 0x03;
+  const bool is_charging = vbus_good && (chg_direction == 1 || (reg01 & 0x07) != 0);
+
+  const uint16_t raw_v = static_cast<uint16_t>(((reg34 & 0x3F) << 8) | reg35);
+
+  status->voltage_mv = raw_v;
+  status->percent = rega4 > 100 ? 100 : rega4;
+  status->is_charging = is_charging;
+  status->is_connected = bat_present && (raw_v > 2500);
+
+  return ESP_OK;
+}
+
 extern "C" esp_err_t board_port_power_off(void) {
   if (pmic == nullptr) {
     return ESP_ERR_INVALID_STATE;

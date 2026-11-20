@@ -64,6 +64,19 @@ esp_err_t board_port_set_brightness(uint8_t percent);
 /** Cycle AMOLED brightness (100% -> 75% -> 45% -> 15% -> 100%). Returns new level. */
 uint8_t board_port_cycle_brightness(void);
 
+/** Get current AMOLED brightness level (0-100%). */
+uint8_t board_port_get_brightness(void);
+
+typedef struct {
+  uint8_t percent;       /* 0 - 100% */
+  bool is_charging;      /* true if external power / charging */
+  bool is_connected;     /* true if battery is detected */
+  uint16_t voltage_mv;   /* battery voltage in mV */
+} board_battery_status_t;
+
+/** Query battery percentage, charging state and voltage from PMIC. */
+esp_err_t board_port_get_battery_status(board_battery_status_t *status);
+
 /**
  * Request AXP2101 software power-off. Keep a deep-sleep fallback in the caller
  * for the USB-powered case until all three supply combinations are bench-tested.

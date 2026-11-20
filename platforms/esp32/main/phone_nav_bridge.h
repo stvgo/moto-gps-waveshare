@@ -36,6 +36,7 @@ class PhoneNavBridge {
   void on_imu_sample(float heading_rate_dps, std::uint64_t sample_ms);
   void update_demo(std::uint64_t now_ms);
   void cycle_page();
+  void update_device_info();
   moto::ble::AckStatus on_message(
       const moto::ble::ReassembledMessage& message);
 
@@ -59,6 +60,7 @@ class PhoneNavBridge {
   static void page_changed(moto_ui_page_t page, void* context);
   static void music_command(moto_music_command_t command, void* context);
   static void demo_changed(uint8_t enabled, void* context);
+  static void device_command(moto_device_command_t command, void* context);
 
   void consume_navigation(const moto::ble::NavigationSnapshot& input);
   moto::ble::AckStatus consume_geometry(
@@ -124,5 +126,6 @@ class PhoneNavBridge {
   std::uint64_t last_motion_present_ms_ = 0;
   moto::nav::NavSnapshot snapshot_before_demo_{};
   std::uint64_t demo_started_ms_ = 0;
+  uint8_t volume_percent_ = 80;
   bool demo_active_ = false;
 };

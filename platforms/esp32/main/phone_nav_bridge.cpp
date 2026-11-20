@@ -224,6 +224,7 @@ moto::ble::DisplayPage map_page(moto_ui_page_t page) {
     case MOTO_UI_PAGE_SPEED: return moto::ble::DisplayPage::Speed;
     case MOTO_UI_PAGE_COMPASS: return moto::ble::DisplayPage::Compass;
     case MOTO_UI_PAGE_MUSIC: return moto::ble::DisplayPage::Music;
+    case MOTO_UI_PAGE_DEVICE:
     case MOTO_UI_PAGE_NAVIGATION:
     case MOTO_UI_PAGE_COUNT:
     default: return moto::ble::DisplayPage::Navigation;
@@ -291,6 +292,7 @@ void PhoneNavBridge::install_ui_callbacks() {
   moto_nav_ui_set_page_change_callback(page_changed, this);
   moto_nav_ui_set_music_command_callback(music_command, this);
   moto_nav_ui_set_demo_change_callback(demo_changed, this);
+  moto_nav_ui_set_device_command_callback(device_command, this);
 }
 
 bool PhoneNavBridge::start_renderer() {
@@ -1028,6 +1030,59 @@ void PhoneNavBridge::music_command(moto_music_command_t command,
 
 void PhoneNavBridge::demo_changed(uint8_t enabled, void* context) {
   static_cast<PhoneNavBridge*>(context)->set_demo_active(enabled != 0U);
+}
+
+void PhoneNavBridge::device_command(moto_device_command_t command,
+                                    void* context) {
+  auto* self = static_cast<PhoneNavBridge*>(context);
+  switch (command) {
+    case MOTO_DEVICE_CMD_CYCLE_BRIGHTNESS: {
+      board_port_cycle_brightness();
+      self->update_device_info();
+      break;
+    }
+    case MOTO_DEVICE_CMD_VOL_DOWN: {
+      if (self->volume_percent_ >= 10) {
+        self->volume_percent_ -= 10;
+      }
+      self->update_device_info();
+      break;
+    }
+    case MOTO_DEVICE_CMD_VOL_UP: {
+      if (self->volume_percent_ <= 90) {
+        self->volume_percent_ += 10;
+      }
+      self->update_device_info();
+      break;
+    }
+  }
+}
+
+void PhoneNavBridge::update_device_info() {
+  board_battery_status_t bat{};
+  board_port_get_battery_status(&bat);
+
+  moto_device_state_t dev{};
+  dev.battery_percent = bat.percent;
+  dev.battery_charging = bat.is_charging ? 1 : 0;
+  dev.battery_present = bat.is_connected ? 1 : 0;
+  dev.battery_voltage_mv = bat.voltage_mv;
+  dev.brightness_percent = board_port_get_brightness();
+  dev.volume_percent = volume_percent_;
+  {
+    const std::lock_guard<std::mutex> lock(state_mutex_);
+    dev.ble_connected = link_active_ ? 1 : 0;
+  }
+#ifdef ESP_PLATFORM
+  dev.free_heap_kb = static_cast<uint32_t>(esp_get_free_heap_size() / 1024U);
+#else
+  dev.free_heap_kb = 185;
+#endif
+
+  if (board_port_lock(100)) {
+    moto_nav_ui_set_device_state(&dev);
+    board_port_unlock();
+  }
 }
 
 void PhoneNavBridge::send_page_command(moto_ui_page_t page) {

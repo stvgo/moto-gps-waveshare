@@ -100,6 +100,7 @@ DisplayPage display_page_from_ui(moto_ui_page_t page) {
     case MOTO_UI_PAGE_SPEED: return DisplayPage::Speed;
     case MOTO_UI_PAGE_COMPASS: return DisplayPage::Compass;
     case MOTO_UI_PAGE_MUSIC: return DisplayPage::Music;
+    case MOTO_UI_PAGE_DEVICE:
     case MOTO_UI_PAGE_NAVIGATION:
     case MOTO_UI_PAGE_COUNT:
       return DisplayPage::Navigation;

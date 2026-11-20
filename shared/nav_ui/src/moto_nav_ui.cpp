@@ -177,6 +177,22 @@ struct Ui {
     void *page_callback_context = nullptr;
     moto_demo_change_callback_t demo_callback = nullptr;
     void *demo_callback_context = nullptr;
+    moto_device_command_callback_t device_callback = nullptr;
+    void *device_callback_context = nullptr;
+
+    lv_obj_t *device_title = nullptr;
+    lv_obj_t *device_battery_val = nullptr;
+    lv_obj_t *device_battery_sub = nullptr;
+    lv_obj_t *device_bright_val = nullptr;
+    lv_obj_t *device_bright_btn = nullptr;
+    lv_obj_t *device_bright_btn_lbl = nullptr;
+    lv_obj_t *device_vol_val = nullptr;
+    lv_obj_t *device_vol_minus_btn = nullptr;
+    lv_obj_t *device_vol_plus_btn = nullptr;
+    lv_obj_t *device_ble_val = nullptr;
+    lv_obj_t *device_diag_val = nullptr;
+    moto_device_state_t device{};
+
     bool music_page_enabled = true;
     bool demo_active = false;
     bool reduce_motion = false;
@@ -280,7 +296,7 @@ void update_page_dots() {
         lv_obj_set_size(ui.page_dots[i], px(active ? 16 : 5), px(5));
         lv_obj_set_style_radius(ui.page_dots[i], px(3), 0);
         lv_obj_set_style_bg_color(ui.page_dots[i], active ? kWhite : kGraphite, 0);
-        lv_obj_set_x(ui.page_dots[i], px(145 + i * 22 - (active ? 5 : 0)));
+        lv_obj_set_x(ui.page_dots[i], px(138 + i * 19 - (active ? 5 : 0)));
         const bool available = i != MOTO_UI_PAGE_MUSIC || ui.music_page_enabled;
         if(ui.page_dots_visible && available) {
             lv_obj_remove_flag(ui.page_dots[i], LV_OBJ_FLAG_HIDDEN);
@@ -354,7 +370,7 @@ void gesture_event(lv_event_t *) {
         return;
     }
     if(!ui.music_page_enabled && next == MOTO_UI_PAGE_MUSIC) {
-        next = direction == LV_DIR_LEFT ? MOTO_UI_PAGE_NAVIGATION
+        next = direction == LV_DIR_LEFT ? MOTO_UI_PAGE_DEVICE
                                         : MOTO_UI_PAGE_COMPASS;
     }
     const auto requested = static_cast<moto_ui_page_t>(next);
@@ -1852,6 +1868,165 @@ void create_music_page() {
     }
 }
 
+void device_button_event(lv_event_t *event) {
+    const auto command = static_cast<moto_device_command_t>(
+        reinterpret_cast<std::intptr_t>(lv_event_get_user_data(event)));
+    if(ui.device_callback != nullptr) {
+        ui.device_callback(command, ui.device_callback_context);
+    }
+}
+
+void configure_flat_btn(lv_obj_t *btn) {
+    lv_obj_set_style_bg_color(btn, kGraphite, 0);
+    lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
+    lv_obj_set_style_shadow_width(btn, 0, 0);
+    lv_obj_set_style_border_width(btn, 0, 0);
+    lv_obj_set_style_bg_color(btn, kGraphite, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_width(btn, 0, LV_STATE_PRESSED);
+    lv_obj_set_style_border_width(btn, 0, LV_STATE_PRESSED);
+    lv_obj_set_style_recolor_opa(btn, LV_OPA_TRANSP, LV_STATE_PRESSED);
+    lv_obj_set_style_transform_width(btn, 0, LV_STATE_PRESSED);
+    lv_obj_set_style_transform_height(btn, 0, LV_STATE_PRESSED);
+    lv_obj_add_flag(btn, LV_OBJ_FLAG_GESTURE_BUBBLE);
+}
+
+void create_device_page() {
+    lv_obj_t *page = ui.pages[MOTO_UI_PAGE_DEVICE];
+
+    ui.device_title = make_label(page, &lv_font_montserrat_16, kQuiet, "DEVICE / SYSTEM");
+    lv_obj_set_style_text_letter_space(ui.device_title, px(2), 0);
+    lv_obj_align(ui.device_title, LV_ALIGN_TOP_MID, 0, px(26));
+
+    // Section 1: Battery
+    lv_obj_t *bat_kicker = make_label(page, &lv_font_montserrat_16, kQuiet, "BATERIA");
+    lv_obj_set_pos(bat_kicker, px(55), px(56));
+
+    ui.device_battery_val = make_label(page, &lv_font_montserrat_28, kGreen, "--%");
+    lv_obj_set_pos(ui.device_battery_val, px(55), px(76));
+
+    ui.device_battery_sub = make_label(page, &lv_font_montserrat_16, kSoft, "Leyendo...");
+    lv_obj_set_pos(ui.device_battery_sub, px(148), px(84));
+
+    // Divider line 1
+    lv_obj_t *div1 = lv_obj_create(page);
+    lv_obj_set_size(div1, px(250), px(1));
+    lv_obj_align(div1, LV_ALIGN_TOP_MID, 0, px(116));
+    lv_obj_set_style_bg_color(div1, kGraphite, 0);
+    lv_obj_set_style_bg_opa(div1, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(div1, 0, 0);
+
+    // Section 2: Brightness
+    lv_obj_t *bright_kicker = make_label(page, &lv_font_montserrat_16, kQuiet, "BRILLO");
+    lv_obj_set_pos(bright_kicker, px(55), px(124));
+
+    ui.device_bright_val = make_label(page, &lv_font_montserrat_28, kWhite, "100%");
+    lv_obj_set_pos(ui.device_bright_val, px(55), px(144));
+
+    ui.device_bright_btn = lv_button_create(page);
+    lv_obj_set_size(ui.device_bright_btn, px(96), px(34));
+    lv_obj_set_pos(ui.device_bright_btn, px(205), px(142));
+    lv_obj_set_style_radius(ui.device_bright_btn, px(17), 0);
+    lv_obj_set_style_radius(ui.device_bright_btn, px(17), LV_STATE_PRESSED);
+    configure_flat_btn(ui.device_bright_btn);
+    lv_obj_add_event_cb(ui.device_bright_btn, device_button_event, LV_EVENT_CLICKED,
+                        reinterpret_cast<void *>(static_cast<std::intptr_t>(MOTO_DEVICE_CMD_CYCLE_BRIGHTNESS)));
+    ui.device_bright_btn_lbl = make_label(ui.device_bright_btn, &lv_font_montserrat_16, kWhite, "CAMBIAR");
+    lv_obj_center(ui.device_bright_btn_lbl);
+
+    // Divider line 2
+    lv_obj_t *div2 = lv_obj_create(page);
+    lv_obj_set_size(div2, px(250), px(1));
+    lv_obj_align(div2, LV_ALIGN_TOP_MID, 0, px(184));
+    lv_obj_set_style_bg_color(div2, kGraphite, 0);
+    lv_obj_set_style_bg_opa(div2, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(div2, 0, 0);
+
+    // Section 3: Volume
+    lv_obj_t *vol_kicker = make_label(page, &lv_font_montserrat_16, kQuiet, "VOLUMEN");
+    lv_obj_set_pos(vol_kicker, px(55), px(192));
+
+    ui.device_vol_val = make_label(page, &lv_font_montserrat_28, kWhite, "80%");
+    lv_obj_set_pos(ui.device_vol_val, px(55), px(212));
+
+    ui.device_vol_minus_btn = lv_button_create(page);
+    lv_obj_set_size(ui.device_vol_minus_btn, px(42), px(34));
+    lv_obj_set_pos(ui.device_vol_minus_btn, px(205), px(210));
+    lv_obj_set_style_radius(ui.device_vol_minus_btn, px(17), 0);
+    lv_obj_set_style_radius(ui.device_vol_minus_btn, px(17), LV_STATE_PRESSED);
+    configure_flat_btn(ui.device_vol_minus_btn);
+    lv_obj_add_event_cb(ui.device_vol_minus_btn, device_button_event, LV_EVENT_CLICKED,
+                        reinterpret_cast<void *>(static_cast<std::intptr_t>(MOTO_DEVICE_CMD_VOL_DOWN)));
+    lv_obj_t *minus_lbl = make_label(ui.device_vol_minus_btn, &lv_font_montserrat_20, kWhite, "-");
+    lv_obj_center(minus_lbl);
+
+    ui.device_vol_plus_btn = lv_button_create(page);
+    lv_obj_set_size(ui.device_vol_plus_btn, px(42), px(34));
+    lv_obj_set_pos(ui.device_vol_plus_btn, px(255), px(210));
+    lv_obj_set_style_radius(ui.device_vol_plus_btn, px(17), 0);
+    lv_obj_set_style_radius(ui.device_vol_plus_btn, px(17), LV_STATE_PRESSED);
+    configure_flat_btn(ui.device_vol_plus_btn);
+    lv_obj_add_event_cb(ui.device_vol_plus_btn, device_button_event, LV_EVENT_CLICKED,
+                        reinterpret_cast<void *>(static_cast<std::intptr_t>(MOTO_DEVICE_CMD_VOL_UP)));
+    lv_obj_t *plus_lbl = make_label(ui.device_vol_plus_btn, &lv_font_montserrat_20, kWhite, "+");
+    lv_obj_center(plus_lbl);
+
+    // Section 4: BLE & System Diag
+    ui.device_ble_val = make_label(page, &lv_font_montserrat_16, kQuiet, "BLUETOOTH: DESCONECTADO");
+    lv_obj_set_width(ui.device_ble_val, px(300));
+    lv_obj_set_style_text_align(ui.device_ble_val, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(ui.device_ble_val, LV_ALIGN_TOP_MID, 0, px(262));
+
+    ui.device_diag_val = make_label(page, &lv_font_montserrat_16, kQuiet, "ESP32-S3 · 240 MHz");
+    lv_obj_set_width(ui.device_diag_val, px(300));
+    lv_obj_set_style_text_align(ui.device_diag_val, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(ui.device_diag_val, LV_ALIGN_TOP_MID, 0, px(286));
+}
+
+void update_device_view() {
+    if(ui.pages[MOTO_UI_PAGE_DEVICE] == nullptr) return;
+
+    char bat_val_str[16];
+    char bat_sub_str[48];
+    if(ui.device.battery_present) {
+        std::snprintf(bat_val_str, sizeof(bat_val_str), "%u%%", ui.device.battery_percent);
+        if(ui.device.battery_charging) {
+            std::snprintf(bat_sub_str, sizeof(bat_sub_str), "Cargando · %.2f V", ui.device.battery_voltage_mv / 1000.0f);
+            lv_obj_set_style_text_color(ui.device_battery_val, kIce, 0);
+        } else {
+            std::snprintf(bat_sub_str, sizeof(bat_sub_str), "En uso · %.2f V", ui.device.battery_voltage_mv / 1000.0f);
+            const lv_color_t color = ui.device.battery_percent > 20 ? kGreen : (ui.device.battery_percent > 10 ? kAmber : kRed);
+            lv_obj_set_style_text_color(ui.device_battery_val, color, 0);
+        }
+    } else {
+        std::snprintf(bat_val_str, sizeof(bat_val_str), "USB");
+        std::snprintf(bat_sub_str, sizeof(bat_sub_str), "Alimentacion USB directa");
+        lv_obj_set_style_text_color(ui.device_battery_val, kIce, 0);
+    }
+    lv_label_set_text(ui.device_battery_val, bat_val_str);
+    lv_label_set_text(ui.device_battery_sub, bat_sub_str);
+
+    char bright_str[16];
+    std::snprintf(bright_str, sizeof(bright_str), "%u%%", ui.device.brightness_percent);
+    lv_label_set_text(ui.device_bright_val, bright_str);
+
+    char vol_str[16];
+    std::snprintf(vol_str, sizeof(vol_str), "%u%%", ui.device.volume_percent);
+    lv_label_set_text(ui.device_vol_val, vol_str);
+
+    if(ui.device.ble_connected) {
+        lv_label_set_text(ui.device_ble_val, "BLUETOOTH: CONECTADO");
+        lv_obj_set_style_text_color(ui.device_ble_val, kGreen, 0);
+    } else {
+        lv_label_set_text(ui.device_ble_val, "BLUETOOTH: DESCONECTADO");
+        lv_obj_set_style_text_color(ui.device_ble_val, kQuiet, 0);
+    }
+
+    char diag_str[48];
+    std::snprintf(diag_str, sizeof(diag_str), "ESP32-S3 · RAM: %lu KB LIBRE", static_cast<unsigned long>(ui.device.free_heap_kb));
+    lv_label_set_text(ui.device_diag_val, diag_str);
+}
+
 void set_boot_content_opacity(void *object, int32_t opacity) {
     lv_obj_set_style_opa(static_cast<lv_obj_t *>(object), opacity, 0);
 }
@@ -1993,6 +2168,7 @@ extern "C" void moto_nav_ui_create(void) {
     create_speed_page();
     create_compass_page();
     create_music_page();
+    create_device_page();
     create_page_dots();
     // Press events are delivered to the topmost object under the finger, not
     // necessarily to its page. Register once across the finished tree so any
@@ -2024,6 +2200,7 @@ extern "C" void moto_nav_ui_set_state(const moto_ui_state_t *state) {
         case MOTO_UI_PAGE_SPEED: update_speedometer(state); break;
         case MOTO_UI_PAGE_COMPASS: update_compass(state); break;
         case MOTO_UI_PAGE_MUSIC:
+        case MOTO_UI_PAGE_DEVICE:
         case MOTO_UI_PAGE_COUNT: break;
     }
 }
@@ -2135,4 +2312,16 @@ extern "C" void moto_nav_ui_set_demo_change_callback(
     moto_demo_change_callback_t callback, void *context) {
     ui.demo_callback = callback;
     ui.demo_callback_context = context;
+}
+
+extern "C" void moto_nav_ui_set_device_state(const moto_device_state_t *state) {
+    if(state == nullptr) return;
+    ui.device = *state;
+    update_device_view();
+}
+
+extern "C" void moto_nav_ui_set_device_command_callback(
+    moto_device_command_callback_t callback, void *context) {
+    ui.device_callback = callback;
+    ui.device_callback_context = context;
 }

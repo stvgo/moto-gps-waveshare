@@ -58,6 +58,7 @@ typedef enum {
     MOTO_UI_PAGE_SPEED,
     MOTO_UI_PAGE_COMPASS,
     MOTO_UI_PAGE_MUSIC,
+    MOTO_UI_PAGE_DEVICE,
     MOTO_UI_PAGE_COUNT,
 } moto_ui_page_t;
 
@@ -100,7 +101,26 @@ typedef struct {
     uint8_t liked;
 } moto_music_state_t;
 
+typedef struct {
+    uint8_t battery_percent;
+    uint8_t battery_charging;
+    uint8_t battery_present;
+    uint16_t battery_voltage_mv;
+    uint8_t brightness_percent;
+    uint8_t volume_percent;
+    uint8_t ble_connected;
+    uint32_t free_heap_kb;
+} moto_device_state_t;
+
+typedef enum {
+    MOTO_DEVICE_CMD_CYCLE_BRIGHTNESS = 0,
+    MOTO_DEVICE_CMD_VOL_DOWN,
+    MOTO_DEVICE_CMD_VOL_UP,
+} moto_device_command_t;
+
 typedef void (*moto_music_command_callback_t)(moto_music_command_t command,
+                                               void *context);
+typedef void (*moto_device_command_callback_t)(moto_device_command_t command,
                                                void *context);
 typedef void (*moto_page_change_callback_t)(moto_ui_page_t page,
                                              void *context);
@@ -165,6 +185,10 @@ void moto_nav_ui_set_music_state(const moto_music_state_t *state);
 void moto_nav_ui_set_music_page_enabled(uint8_t enabled);
 void moto_nav_ui_set_music_command_callback(
     moto_music_command_callback_t callback,
+    void *context);
+void moto_nav_ui_set_device_state(const moto_device_state_t *state);
+void moto_nav_ui_set_device_command_callback(
+    moto_device_command_callback_t callback,
     void *context);
 /** Mark the production navigation renderer as being fed by demo snapshots. */
 void moto_nav_ui_set_demo_active(uint8_t enabled);
