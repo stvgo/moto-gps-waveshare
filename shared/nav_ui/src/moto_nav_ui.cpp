@@ -2208,7 +2208,9 @@ extern "C" void moto_nav_ui_create(void) {
 
 extern "C" void moto_nav_ui_set_state(const moto_ui_state_t *state) {
     if(state == nullptr || ui.screen == nullptr) return;
-    show_page(state->page);
+    if(ui.page != MOTO_UI_PAGE_DEVICE || state->page == MOTO_UI_PAGE_DEVICE) {
+        show_page(state->page);
+    }
     // Hidden pages do not need to be invalidated. Page changes immediately
     // apply a fresh snapshot through PhoneNavBridge, so this keeps every page
     // correct while avoiding three full page redraws per navigation update.

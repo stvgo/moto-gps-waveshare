@@ -618,7 +618,9 @@ void PhoneNavBridge::consume_navigation(
 
     phone_snapshot.state = map_state(input.state);
     phone_snapshot.network = map_network(input.network);
-    phone_snapshot.display_page = map_page(input.display_page);
+    if (phone_snapshot.display_page != moto::nav::DisplayPage::Device) {
+      phone_snapshot.display_page = map_page(input.display_page);
+    }
     phone_snapshot.has_destination = has_flag(
         input.flags, moto::ble::NavigationHasDestination);
     phone_snapshot.has_usable_fix = has_usable_fix;
@@ -1029,6 +1031,7 @@ void PhoneNavBridge::page_changed(moto_ui_page_t page, void* context) {
   {
     const std::lock_guard<std::mutex> lock(self->state_mutex_);
     self->snapshot_.display_page = map_nav_page(page);
+    self->snapshot_before_demo_.display_page = map_nav_page(page);
   }
   self->present_navigation();
   self->send_page_command(page);
