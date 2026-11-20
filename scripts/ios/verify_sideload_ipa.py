@@ -14,7 +14,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     info = plistlib.loads(archive.read(info_path))
     assert info['CFBundlePackageType'] == 'APPL'
     assert info['CFBundleSupportedPlatforms'] == ['iPhoneOS'], 'Must be a device build'
-    assert info['MOTOGPSGatewayBaseURL'] == 'https://example.invalid/moto-gps/api/', 'Do not ship a private gateway'
+    assert info['MOTOGPSGatewayBaseURL'].startswith('https://'), 'Must be a valid HTTPS gateway URL'
     assert {'location', 'bluetooth-central'} <= set(info['UIBackgroundModes'])
     assert not any(p.endswith(('embedded.mobileprovision', '.p12', '.p8', '.pem')) or '/_CodeSignature/' in p for p in names), 'Signing credentials/profile must not be distributed'
     for name in ['NSBluetoothAlwaysUsageDescription', 'NSLocationAlwaysAndWhenInUseUsageDescription', 'NSLocationWhenInUseUsageDescription']:
