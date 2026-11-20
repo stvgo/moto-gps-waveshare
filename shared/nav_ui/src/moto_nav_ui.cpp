@@ -262,6 +262,8 @@ const char *cardinal_name(std::uint16_t heading) {
     return names[((heading + 22U) / 45U) % 8U];
 }
 
+void update_device_view();
+
 void draw_vehicle_marker(lv_event_t *event) {
     lv_obj_t *object = lv_event_get_target_obj(event);
     lv_area_t area;
@@ -351,6 +353,9 @@ void show_page(moto_ui_page_t page, bool reveal_on_same_page = false) {
             lv_obj_add_flag(ui.pages[i], LV_OBJ_FLAG_HIDDEN);
         }
     }
+    if(page == MOTO_UI_PAGE_DEVICE) {
+        update_device_view();
+    }
     update_page_dots();
     // Navigation state arrives continuously. Only a real page transition or
     // user action may restart the five-second affordance timer.
@@ -374,10 +379,9 @@ void gesture_event(lv_event_t *) {
                                         : MOTO_UI_PAGE_COMPASS;
     }
     const auto requested = static_cast<moto_ui_page_t>(next);
+    show_page(requested, true);
     if(ui.page_callback != nullptr) {
         ui.page_callback(requested, ui.page_callback_context);
-    } else {
-        show_page(requested, true);
     }
     reveal_page_dots();
     lv_indev_wait_release(indev);
@@ -1910,11 +1914,12 @@ void create_device_page() {
 
     // Divider line 1
     lv_obj_t *div1 = lv_obj_create(page);
+    lv_obj_remove_style_all(div1);
+    lv_obj_clear_flag(div1, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_size(div1, px(250), px(1));
     lv_obj_align(div1, LV_ALIGN_TOP_MID, 0, px(116));
     lv_obj_set_style_bg_color(div1, kGraphite, 0);
     lv_obj_set_style_bg_opa(div1, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(div1, 0, 0);
 
     // Section 2: Brightness
     lv_obj_t *bright_kicker = make_label(page, &lv_font_montserrat_16, kQuiet, "BRILLO");
@@ -1936,11 +1941,12 @@ void create_device_page() {
 
     // Divider line 2
     lv_obj_t *div2 = lv_obj_create(page);
+    lv_obj_remove_style_all(div2);
+    lv_obj_clear_flag(div2, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_size(div2, px(250), px(1));
     lv_obj_align(div2, LV_ALIGN_TOP_MID, 0, px(184));
     lv_obj_set_style_bg_color(div2, kGraphite, 0);
     lv_obj_set_style_bg_opa(div2, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(div2, 0, 0);
 
     // Section 3: Volume
     lv_obj_t *vol_kicker = make_label(page, &lv_font_montserrat_16, kQuiet, "VOLUMEN");
@@ -1981,6 +1987,13 @@ void create_device_page() {
     lv_obj_set_width(ui.device_diag_val, px(300));
     lv_obj_set_style_text_align(ui.device_diag_val, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(ui.device_diag_val, LV_ALIGN_TOP_MID, 0, px(286));
+
+    ui.device.brightness_percent = 100;
+    ui.device.volume_percent = 80;
+    ui.device.battery_percent = 0;
+    ui.device.battery_present = 0;
+    ui.device.free_heap_kb = 185;
+    update_device_view();
 }
 
 void update_device_view() {
@@ -1989,29 +2002,33 @@ void update_device_view() {
     char bat_val_str[16];
     char bat_sub_str[48];
     if(ui.device.battery_present) {
-        std::snprintf(bat_val_str, sizeof(bat_val_str), "%u%%", ui.device.battery_percent);
+        uint8_t pct = ui.device.battery_percent;
+        if((pct == 0 || pct > 100) && ui.device.battery_voltage_mv >= 3300) {
+            pct = static_cast<uint8_t>(std::clamp((ui.device.battery_voltage_mv - 3300) * 100 / 900, 0, 100));
+        }
+        std::snprintf(bat_val_str, sizeof(bat_val_str), "%u%%", pct);
         if(ui.device.battery_charging) {
             std::snprintf(bat_sub_str, sizeof(bat_sub_str), "Cargando · %.2f V", ui.device.battery_voltage_mv / 1000.0f);
             lv_obj_set_style_text_color(ui.device_battery_val, kIce, 0);
         } else {
             std::snprintf(bat_sub_str, sizeof(bat_sub_str), "En uso · %.2f V", ui.device.battery_voltage_mv / 1000.0f);
-            const lv_color_t color = ui.device.battery_percent > 20 ? kGreen : (ui.device.battery_percent > 10 ? kAmber : kRed);
+            const lv_color_t color = pct > 20 ? kGreen : (pct > 10 ? kAmber : kRed);
             lv_obj_set_style_text_color(ui.device_battery_val, color, 0);
         }
     } else {
         std::snprintf(bat_val_str, sizeof(bat_val_str), "USB");
-        std::snprintf(bat_sub_str, sizeof(bat_sub_str), "Alimentacion USB directa");
+        std::snprintf(bat_sub_str, sizeof(bat_sub_str), "Alimentacion USB");
         lv_obj_set_style_text_color(ui.device_battery_val, kIce, 0);
     }
     lv_label_set_text(ui.device_battery_val, bat_val_str);
     lv_label_set_text(ui.device_battery_sub, bat_sub_str);
 
     char bright_str[16];
-    std::snprintf(bright_str, sizeof(bright_str), "%u%%", ui.device.brightness_percent);
+    std::snprintf(bright_str, sizeof(bright_str), "%u%%", ui.device.brightness_percent == 0 ? 100 : ui.device.brightness_percent);
     lv_label_set_text(ui.device_bright_val, bright_str);
 
     char vol_str[16];
-    std::snprintf(vol_str, sizeof(vol_str), "%u%%", ui.device.volume_percent);
+    std::snprintf(vol_str, sizeof(vol_str), "%u%%", ui.device.volume_percent == 0 ? 80 : ui.device.volume_percent);
     lv_label_set_text(ui.device_vol_val, vol_str);
 
     if(ui.device.ble_connected) {

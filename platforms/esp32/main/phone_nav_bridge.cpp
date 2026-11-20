@@ -232,7 +232,15 @@ moto::ble::DisplayPage map_page(moto_ui_page_t page) {
 }
 
 moto::nav::DisplayPage map_nav_page(moto_ui_page_t page) {
-  return map_page(map_page(page));
+  switch (page) {
+    case MOTO_UI_PAGE_SPEED: return moto::nav::DisplayPage::Speed;
+    case MOTO_UI_PAGE_COMPASS: return moto::nav::DisplayPage::Compass;
+    case MOTO_UI_PAGE_MUSIC: return moto::nav::DisplayPage::Music;
+    case MOTO_UI_PAGE_DEVICE: return moto::nav::DisplayPage::Device;
+    case MOTO_UI_PAGE_NAVIGATION:
+    case MOTO_UI_PAGE_COUNT:
+    default: return moto::nav::DisplayPage::Navigation;
+  }
 }
 
 moto::nav::ManeuverType map_maneuver(moto::ble::Maneuver maneuver) {
@@ -1010,6 +1018,9 @@ void PhoneNavBridge::run_renderer() {
 void PhoneNavBridge::cycle_page() {
   moto_ui_page_t current = moto_nav_ui_get_page();
   auto next = static_cast<moto_ui_page_t>((static_cast<int>(current) + 1) % MOTO_UI_PAGE_COUNT);
+  if (!music_page_enabled_ && next == MOTO_UI_PAGE_MUSIC) {
+    next = static_cast<moto_ui_page_t>((static_cast<int>(next) + 1) % MOTO_UI_PAGE_COUNT);
+  }
   page_changed(next, this);
 }
 
@@ -1086,6 +1097,9 @@ void PhoneNavBridge::update_device_info() {
 }
 
 void PhoneNavBridge::send_page_command(moto_ui_page_t page) {
+  if (page == MOTO_UI_PAGE_DEVICE) {
+    return;
+  }
   moto::ble::DeviceCommand command;
   command.kind = moto::ble::DeviceCommandKind::PageSelected;
   command.page = map_page(page);
