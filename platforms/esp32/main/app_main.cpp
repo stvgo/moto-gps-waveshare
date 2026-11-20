@@ -8,6 +8,8 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/idf_additions.h"
+#include "esp_heap_caps.h"
 #include "moto_nav_presenter.hpp"
 #include "moto_nav_ui.h"
 #include "motion_heading_sensor.h"
@@ -44,35 +46,38 @@ void demo_tick_task(void* context) {
   }
 }
 
-void power_button_task(void*) {
+void buttons_task(void* context) {
+  auto* bridge = static_cast<PhoneNavBridge*>(context);
   std::uint64_t pwr_pressed_since_ms = 0;
   bool pwr_released_once = false;
 
   std::uint64_t boot_pressed_since_ms = 0;
   bool boot_released_once = false;
 
+  ESP_LOGI(kTag, "Buttons task started! Monitoring PWR (GPIO3) and BOOT (GPIO0)");
+
   while (true) {
     const std::uint64_t now_ms =
         static_cast<std::uint64_t>(esp_timer_get_time()) / 1'000U;
 
-    // --- PWR BUTTON (GPIO3) ---
+    // --- PWR BUTTON (GPIO3, Active-HIGH) ---
     if (!board_port_power_button_pressed()) {
       if (!pwr_released_once) {
         pwr_released_once = true;
-        ESP_LOGI(kTag, "PWR ready: button released, hold detection armed");
+        ESP_LOGI(kTag, "PWR button ready: hold detection armed");
       }
       if (pwr_pressed_since_ms > 0) {
         const std::uint64_t duration = now_ms - pwr_pressed_since_ms;
         if (duration >= 50 && duration < kPowerHoldMs) {
-          ESP_LOGI(kTag, "PWR short press: cycling AMOLED brightness");
-          board_port_cycle_brightness();
+          uint8_t lvl = board_port_cycle_brightness();
+          ESP_LOGI(kTag, "PWR clicked: AMOLED brightness -> %u%%", lvl);
         }
       }
       pwr_pressed_since_ms = 0;
     } else if (pwr_released_once) {
       if (pwr_pressed_since_ms == 0) {
         pwr_pressed_since_ms = now_ms;
-        ESP_LOGI(kTag, "PWR press started");
+        ESP_LOGI(kTag, "PWR press detected");
       } else if (now_ms - pwr_pressed_since_ms >= kPowerHoldMs) {
         ESP_LOGI(kTag, "PWR held for 3 seconds; requesting shutdown");
         if (board_port_lock(UINT32_MAX)) {
@@ -86,9 +91,6 @@ void power_button_task(void*) {
                    esp_err_to_name(result));
         }
 
-        // AXP2101 should remove the switched rails here. If this particular
-        // board remains alive while USB is attached, blank the panel and enter
-        // deep sleep after key release. GPIO3 high wakes it on the next press.
         vTaskDelay(pdMS_TO_TICKS(500));
         while (board_port_power_button_pressed()) {
           vTaskDelay(pdMS_TO_TICKS(20));
@@ -99,20 +101,18 @@ void power_button_task(void*) {
       }
     }
 
-    // --- BOOT BUTTON (GPIO0) ---
+    // --- BOOT BUTTON (GPIO0, Active-LOW) ---
     if (!board_port_boot_button_pressed()) {
       if (!boot_released_once) {
         boot_released_once = true;
+        ESP_LOGI(kTag, "BOOT button ready");
       }
       if (boot_pressed_since_ms > 0) {
         const std::uint64_t duration = now_ms - boot_pressed_since_ms;
         if (duration >= 50 && duration < 1200) {
-          ESP_LOGI(kTag, "BOOT button clicked: switching to next screen page");
-          if (board_port_lock(UINT32_MAX)) {
-            moto_ui_page_t current = moto_nav_ui_get_page();
-            auto next = static_cast<moto_ui_page_t>((static_cast<int>(current) + 1) % MOTO_UI_PAGE_COUNT);
-            moto_nav_ui_set_page(next);
-            board_port_unlock();
+          ESP_LOGI(kTag, "BOOT clicked: cycling page via PhoneNavBridge");
+          if (bridge != nullptr) {
+            bridge->cycle_page();
           }
         }
       }
@@ -120,10 +120,11 @@ void power_button_task(void*) {
     } else if (boot_released_once) {
       if (boot_pressed_since_ms == 0) {
         boot_pressed_since_ms = now_ms;
+        ESP_LOGI(kTag, "BOOT press detected");
       }
     }
 
-    vTaskDelay(pdMS_TO_TICKS(20));
+    vTaskDelay(pdMS_TO_TICKS(25));
   }
 }
 } // namespace
@@ -231,13 +232,13 @@ extern "C" void app_main(void) {
 
   // Demo generation fills the retained snapshot in place, but geometry and
   // LVGL projection still use deeper C++ call frames than a trivial task.
-  if (xTaskCreate(demo_tick_task, "moto_demo", 6'144, &phone_bridge, 2,
-                  nullptr) != pdPASS) {
+  if (xTaskCreateWithCaps(demo_tick_task, "moto_demo", 4'096, &phone_bridge, 2,
+                          nullptr, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) != pdPASS) {
     ESP_LOGW(kTag, "navigation demo task could not start");
   }
-  if (xTaskCreate(power_button_task, "moto_power", 3'072, nullptr, 3,
-                  nullptr) != pdPASS) {
-    ESP_LOGW(kTag, "PWR long-hold task could not start");
+  if (xTaskCreateWithCaps(buttons_task, "moto_buttons", 4'096, &phone_bridge, 3,
+                          nullptr, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT) != pdPASS) {
+    ESP_LOGW(kTag, "buttons task could not start");
   }
 
   ESP_LOGI(kTag,

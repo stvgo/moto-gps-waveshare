@@ -1004,6 +1004,12 @@ void PhoneNavBridge::run_renderer() {
 }
 #endif
 
+void PhoneNavBridge::cycle_page() {
+  moto_ui_page_t current = moto_nav_ui_get_page();
+  auto next = static_cast<moto_ui_page_t>((static_cast<int>(current) + 1) % MOTO_UI_PAGE_COUNT);
+  page_changed(next, this);
+}
+
 void PhoneNavBridge::page_changed(moto_ui_page_t page, void* context) {
   auto* self = static_cast<PhoneNavBridge*>(context);
   {

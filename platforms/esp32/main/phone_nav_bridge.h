@@ -35,6 +35,7 @@ class PhoneNavBridge {
   void on_link_state(bool active);
   void on_imu_sample(float heading_rate_dps, std::uint64_t sample_ms);
   void update_demo(std::uint64_t now_ms);
+  void cycle_page();
   moto::ble::AckStatus on_message(
       const moto::ble::ReassembledMessage& message);
 
